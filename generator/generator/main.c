@@ -1,0 +1,40 @@
+#include "atmel_start.h"
+#include "atmel_start_pins.h"
+#include "stdio_start.h"
+
+#include "modulation.h"
+
+#include "systick.h"
+
+int main(void)
+{
+	system_init();
+	systick_init();
+	STDIO_REDIRECT_0_init();
+	
+	/*Enable system interrupt*/
+	//system_interrupt_enable_global();
+	
+	USART_0_example();
+	STDIO_REDIRECT_0_example();
+
+	phasor_state_t phasor_state = initialize_phasor_state();
+	q15_t samples[32];
+
+	//pwm_set_parameters(&PWM_0,10000,5000);
+	//pwm_enable(&PWM_0);
+
+	uint32_t startTicks, endTicks;
+	/* Replace with your application code */
+	while(1) {
+
+		startTicks = systick_read();
+		phasor_model_t phasor_model = create_phasor_model(10.0, 11025);
+		phasor_q15(&phasor_model, &phasor_state, samples, 32);
+		endTicks = systick_read();
+		
+	
+
+		printf("phasor %u main loop iteration in %u systicks\n", phasor_state.level, startTicks-endTicks);
+	}
+}
