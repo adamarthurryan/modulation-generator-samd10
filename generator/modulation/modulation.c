@@ -4,20 +4,20 @@
 #include <arm_math.h>
 
 #define Q31_TO_Q15(a) a>>16
-#define Q31_1 1<<31
-#define Q15_1 1<<15
+#define Q31_1 (1<<31) - 1
+#define Q15_1 (1<<15) - 1
 #define F32_TO_Q31(f32) (q31_t) ((f32-(int)f32)*2147483648.0f) //?
 //#define CLIPQ63_TO_Q31(x) ((q31_t) ((x >> 32) != ((q31_t) x >> 31)) ?	((0x7FFFFFFF ^ ((q31_t) (x >> 63)))) : (q31_t) x)
 
 
 phasor_model_t create_phasor_model(float frequency, uint16_t sampleRate) {
-	float period = frequency/sampleRate;
+	float step = frequency/sampleRate;
 	phasor_model_t model;
 	
 //wow, this brings in a lot of extra code! like 3 or 4 KB!
 //	model.phaseStep=clip_q63_to_q31((q63_t) (period * 2147483648.0f));
 
-	model.phaseStep = F32_TO_Q31(frequency/sampleRate);
+	model.phaseStep = F32_TO_Q31(step);
 	return model;
 }
 adsr_model_t create_adsr_model(uint16_t attackMs, uint16_t decayMs, uint16_t releaseMs, float sustain, uint16_t sampleRate) {
@@ -47,9 +47,12 @@ void phasor_q15(phasor_model_t * model, phasor_state_t * state, q15_t *phaseOut,
 	for (i=0;i<blockSize;i++) {
 		//increment by the phase step
 		acc += model->phaseStep;
+		
 		//overflow the phase
-		if (acc>Q31_1)
-			acc -= Q31_1;
+		//the accumulator overflows to a negative value, which should be truncated to zero
+		if (acc<0)
+			acc = 0;
+		  
 		// maybe this should be done for the whole block at once?
 		*phaseOut = Q31_TO_Q15(acc);
 		
