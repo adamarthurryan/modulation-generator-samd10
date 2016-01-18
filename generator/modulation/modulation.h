@@ -2,6 +2,16 @@
 #ifndef MODULATION_H_
 #define MODULATION_H_
 
+#define MAX_BLOCK_SIZE 64
+
+#define Q31_TO_Q15(a) (a>>16)
+#define Q31_1 ((1<<31) - 1)
+#define Q31_MIN (1<<31)
+#define Q15_1 ((1<<15) - 1)
+#define Q15_HALF (1<<14)
+#define Q15_MIN (1<<15)
+#define F32_TO_Q31(f32) (q31_t) ((f32-(int)f32)*2147483648.0f) //?
+
 #define ARM_MATH_CM0PLUS true
 
 #include <stdint.h>
@@ -45,10 +55,11 @@ void phasor_q15(phasor_model_t * model, phasor_state_t * state, q15_t *phaseOut,
 void saw_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize);
 void sine_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize);
 void tri_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize);
-void square_q15(q15_t duty, q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize);
+void square_q15(q15_t *phaseIn, q15_t duty, q15_t * waveOut, uint32_t blockSize);
 
 void adsr_q15(adsr_model_t * model, uint8_t trigger, adsr_state_t * state, q15_t *envelopeOut, uint32_t blockSize);
 
+void mix2_q15(q15_t *a, q15_t *b, q15_t * out, uint32_t blockSize);
 
 
 #endif /* MODULATION_H_ */
