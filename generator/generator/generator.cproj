@@ -203,84 +203,23 @@
   <armgcc.common.outputfiles.eep>True</armgcc.common.outputfiles.eep>
   <armgcc.common.outputfiles.bin>True</armgcc.common.outputfiles.bin>
   <armgcc.common.outputfiles.srec>True</armgcc.common.outputfiles.srec>
-  <armgcc.compiler.symbols.DefSymbols>
-    <ListValues>
-      <Value>__SAMD10D14AM__</Value>
-      <Value>ARM_MATH_CM0PLUS=true</Value>
-      <Value>NDEBUG</Value>
-    </ListValues>
-  </armgcc.compiler.symbols.DefSymbols>
-  <armgcc.compiler.directories.IncludePaths>
-    <ListValues>
-      <Value>%24(PackRepoDir)\atmel\SAMD10_DFP\1.0.24\include</Value>
-      <Value>%24(PackRepoDir)\arm\cmsis\4.2.0\CMSIS\Include\</Value>
-      <Value>../../modulation</Value>
-      <Value>../</Value>
-      <Value>../utils/include</Value>
-      <Value>../hal/hpl/include</Value>
-      <Value>../hal/hpl/sercom</Value>
-      <Value>../Config</Value>
-      <Value>../hal/hri</Value>
-      <Value>../hal/hpl/sysctrl</Value>
-      <Value>../hal/include</Value>
-      <Value>../hal/hpl/tc</Value>
-      <Value>../hal/hpl/pm</Value>
-      <Value>../hal/hpl/dac</Value>
-      <Value>../hal/hpl/core</Value>
-      <Value>../hal/hpl/eic</Value>
-      <Value>../hal/hpl/tcc</Value>
-      <Value>../hal/hpl/port</Value>
-      <Value>../hal/hpl/gclk</Value>
-      <Value>../stdio_redirect</Value>
-    </ListValues>
-  </armgcc.compiler.directories.IncludePaths>
-  <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
+  <armgcc.compiler.symbols.DefSymbols><ListValues>
+  <Value>__SAMD10D14AM__</Value>
+  <Value>ARM_MATH_CM0PLUS=true</Value>
+  <Value>NDEBUG</Value>
+</ListValues></armgcc.compiler.symbols.DefSymbols>
+  <armgcc.compiler.directories.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\SAMD10_DFP\1.0.24\include</Value><Value>%24(PackRepoDir)\arm\cmsis\4.2.0\CMSIS\Include\</Value><Value>../../modulation</Value><Value>../../osc_parser</Value><Value>../</Value><Value>../utils/include</Value><Value>../hal/hpl/include</Value><Value>../hal/hpl/sercom</Value><Value>../Config</Value><Value>../hal/hri</Value><Value>../hal/hpl/sysctrl</Value><Value>../hal/include</Value><Value>../hal/hpl/tc</Value><Value>../hal/hpl/pm</Value><Value>../hal/hpl/dac</Value><Value>../hal/hpl/core</Value><Value>../hal/hpl/eic</Value><Value>../hal/hpl/tcc</Value><Value>../hal/hpl/port</Value><Value>../hal/hpl/gclk</Value><Value>../stdio_redirect</Value></ListValues></armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
   <armgcc.linker.general.UseNewlibNano>True</armgcc.linker.general.UseNewlibNano>
-  <armgcc.linker.libraries.Libraries>
-    <ListValues>
-      <Value>libm</Value>
-      <Value>libarm_cortexM0l_math.a</Value>
-    </ListValues>
-  </armgcc.linker.libraries.Libraries>
-  <armgcc.linker.libraries.LibrarySearchPaths>
-    <ListValues>
-      <Value>%24(ProjectDir)\Device_Startup</Value>
-      <Value>C:\Program Files (x86)\Atmel\Atmel Toolchain\ARM GCC\Native\4.8.1443\CMSIS_Atmel\CMSIS\Lib\GCC</Value>
-    </ListValues>
-  </armgcc.linker.libraries.LibrarySearchPaths>
+  <armgcc.linker.libraries.Libraries><ListValues><Value>libm</Value><Value>libarm_cortexM0l_math.a</Value></ListValues></armgcc.linker.libraries.Libraries>
+  <armgcc.linker.libraries.LibrarySearchPaths><ListValues><Value>%24(ProjectDir)\Device_Startup</Value><Value>C:\Program Files (x86)\Atmel\Atmel Toolchain\ARM GCC\Native\4.8.1443\CMSIS_Atmel\CMSIS\Lib\GCC</Value></ListValues></armgcc.linker.libraries.LibrarySearchPaths>
   <armgcc.linker.optimization.GarbageCollectUnusedSections>True</armgcc.linker.optimization.GarbageCollectUnusedSections>
   <armgcc.linker.memorysettings.ExternalRAM>False</armgcc.linker.memorysettings.ExternalRAM>
   <armgcc.linker.miscellaneous.LinkerFlags>-Tsamd10d14am_flash.ld</armgcc.linker.miscellaneous.LinkerFlags>
-  <armgcc.preprocessingassembler.general.IncludePaths>
-    <ListValues>
-      <Value>%24(PackRepoDir)\atmel\SAMD10_DFP\1.0.24\include</Value>
-      <Value>%24(PackRepoDir)\arm\cmsis\4.2.0\CMSIS\Include\</Value>
-      <Value>../</Value>
-      <Value>../utils/include</Value>
-      <Value>../hal/hpl/include</Value>
-      <Value>../hal/hpl/sercom</Value>
-      <Value>../Config</Value>
-      <Value>../hal/hri</Value>
-      <Value>../hal/hpl/sysctrl</Value>
-      <Value>../hal/include</Value>
-      <Value>../hal/hpl/tc</Value>
-      <Value>../hal/hpl/pm</Value>
-      <Value>../hal/hpl/dac</Value>
-      <Value>../hal/hpl/core</Value>
-      <Value>../hal/hpl/eic</Value>
-      <Value>../hal/hpl/tcc</Value>
-      <Value>../hal/hpl/port</Value>
-      <Value>../hal/hpl/gclk</Value>
-      <Value>../stdio_redirect</Value>
-    </ListValues>
-  </armgcc.preprocessingassembler.general.IncludePaths>
-  <armgcc.preprocessingassembler.symbols.DefSymbols>
-    <ListValues>
-      <Value>ARM_MATH_CM0PLUS=true</Value>
-    </ListValues>
-  </armgcc.preprocessingassembler.symbols.DefSymbols>
+  <armgcc.preprocessingassembler.general.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\SAMD10_DFP\1.0.24\include</Value><Value>%24(PackRepoDir)\arm\cmsis\4.2.0\CMSIS\Include\</Value><Value>../</Value><Value>../utils/include</Value><Value>../hal/hpl/include</Value><Value>../hal/hpl/sercom</Value><Value>../Config</Value><Value>../hal/hri</Value><Value>../hal/hpl/sysctrl</Value><Value>../hal/include</Value><Value>../hal/hpl/tc</Value><Value>../hal/hpl/pm</Value><Value>../hal/hpl/dac</Value><Value>../hal/hpl/core</Value><Value>../hal/hpl/eic</Value><Value>../hal/hpl/tcc</Value><Value>../hal/hpl/port</Value><Value>../hal/hpl/gclk</Value><Value>../stdio_redirect</Value></ListValues></armgcc.preprocessingassembler.general.IncludePaths>
+  <armgcc.preprocessingassembler.symbols.DefSymbols><ListValues><Value>ARM_MATH_CM0PLUS=true</Value></ListValues></armgcc.preprocessingassembler.symbols.DefSymbols>
+  <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
 </ArmGcc>
     </ToolchainSettings>
   </PropertyGroup>
@@ -292,86 +231,25 @@
   <armgcc.common.outputfiles.eep>True</armgcc.common.outputfiles.eep>
   <armgcc.common.outputfiles.bin>True</armgcc.common.outputfiles.bin>
   <armgcc.common.outputfiles.srec>True</armgcc.common.outputfiles.srec>
-  <armgcc.compiler.symbols.DefSymbols>
-    <ListValues>
-      <Value>__SAMD10D14AM__</Value>
-      <Value>ARM_MATH_CM0PLUS=true</Value>
-      <Value>DEBUG</Value>
-    </ListValues>
-  </armgcc.compiler.symbols.DefSymbols>
-  <armgcc.compiler.directories.IncludePaths>
-    <ListValues>
-      <Value>%24(PackRepoDir)\atmel\SAMD10_DFP\1.0.24\include</Value>
-      <Value>%24(PackRepoDir)\arm\cmsis\4.2.0\CMSIS\Include\</Value>
-      <Value>../../modulation</Value>
-      <Value>../</Value>
-      <Value>../utils/include</Value>
-      <Value>../hal/hpl/include</Value>
-      <Value>../hal/hpl/sercom</Value>
-      <Value>../Config</Value>
-      <Value>../hal/hri</Value>
-      <Value>../hal/hpl/sysctrl</Value>
-      <Value>../hal/include</Value>
-      <Value>../hal/hpl/tc</Value>
-      <Value>../hal/hpl/pm</Value>
-      <Value>../hal/hpl/dac</Value>
-      <Value>../hal/hpl/core</Value>
-      <Value>../hal/hpl/eic</Value>
-      <Value>../hal/hpl/tcc</Value>
-      <Value>../hal/hpl/port</Value>
-      <Value>../hal/hpl/gclk</Value>
-      <Value>../stdio_redirect</Value>
-    </ListValues>
-  </armgcc.compiler.directories.IncludePaths>
-  <armgcc.compiler.optimization.level>Optimize (-O1)</armgcc.compiler.optimization.level>
+  <armgcc.compiler.symbols.DefSymbols><ListValues>
+  <Value>__SAMD10D14AM__</Value>
+  <Value>ARM_MATH_CM0PLUS=true</Value>
+  <Value>DEBUG</Value>
+</ListValues></armgcc.compiler.symbols.DefSymbols>
+  <armgcc.compiler.directories.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\SAMD10_DFP\1.0.24\include</Value><Value>%24(PackRepoDir)\arm\cmsis\4.2.0\CMSIS\Include\</Value><Value>../../modulation</Value><Value>../../osc_parser</Value><Value>../</Value><Value>../utils/include</Value><Value>../hal/hpl/include</Value><Value>../hal/hpl/sercom</Value><Value>../Config</Value><Value>../hal/hri</Value><Value>../hal/hpl/sysctrl</Value><Value>../hal/include</Value><Value>../hal/hpl/tc</Value><Value>../hal/hpl/pm</Value><Value>../hal/hpl/dac</Value><Value>../hal/hpl/core</Value><Value>../hal/hpl/eic</Value><Value>../hal/hpl/tcc</Value><Value>../hal/hpl/port</Value><Value>../hal/hpl/gclk</Value><Value>../stdio_redirect</Value></ListValues></armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
-  <armgcc.compiler.optimization.DebugLevel>Maximum (-g3)</armgcc.compiler.optimization.DebugLevel>
   <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
   <armgcc.linker.general.UseNewlibNano>True</armgcc.linker.general.UseNewlibNano>
-  <armgcc.linker.libraries.Libraries>
-    <ListValues>
-      <Value>libm</Value>
-      <Value>libarm_cortexM0l_math.a</Value>
-    </ListValues>
-  </armgcc.linker.libraries.Libraries>
-  <armgcc.linker.libraries.LibrarySearchPaths>
-    <ListValues>
-      <Value>%24(ProjectDir)\Device_Startup</Value>
-      <Value>C:\Program Files (x86)\Atmel\Atmel Toolchain\ARM GCC\Native\4.8.1443\CMSIS_Atmel\CMSIS\Lib\GCC</Value>
-    </ListValues>
-  </armgcc.linker.libraries.LibrarySearchPaths>
+  <armgcc.linker.libraries.Libraries><ListValues><Value>libm</Value><Value>libarm_cortexM0l_math.a</Value></ListValues></armgcc.linker.libraries.Libraries>
+  <armgcc.linker.libraries.LibrarySearchPaths><ListValues><Value>%24(ProjectDir)\Device_Startup</Value><Value>C:\Program Files (x86)\Atmel\Atmel Toolchain\ARM GCC\Native\4.8.1443\CMSIS_Atmel\CMSIS\Lib\GCC</Value></ListValues></armgcc.linker.libraries.LibrarySearchPaths>
   <armgcc.linker.optimization.GarbageCollectUnusedSections>True</armgcc.linker.optimization.GarbageCollectUnusedSections>
   <armgcc.linker.memorysettings.ExternalRAM>False</armgcc.linker.memorysettings.ExternalRAM>
   <armgcc.linker.miscellaneous.LinkerFlags>-Tsamd10d14am_flash.ld</armgcc.linker.miscellaneous.LinkerFlags>
+  <armgcc.preprocessingassembler.general.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\SAMD10_DFP\1.0.24\include</Value><Value>%24(PackRepoDir)\arm\cmsis\4.2.0\CMSIS\Include\</Value><Value>../</Value><Value>../utils/include</Value><Value>../hal/hpl/include</Value><Value>../hal/hpl/sercom</Value><Value>../Config</Value><Value>../hal/hri</Value><Value>../hal/hpl/sysctrl</Value><Value>../hal/include</Value><Value>../hal/hpl/tc</Value><Value>../hal/hpl/pm</Value><Value>../hal/hpl/dac</Value><Value>../hal/hpl/core</Value><Value>../hal/hpl/eic</Value><Value>../hal/hpl/tcc</Value><Value>../hal/hpl/port</Value><Value>../hal/hpl/gclk</Value><Value>../stdio_redirect</Value></ListValues></armgcc.preprocessingassembler.general.IncludePaths>
+  <armgcc.preprocessingassembler.symbols.DefSymbols><ListValues><Value>ARM_MATH_CM0PLUS=true</Value></ListValues></armgcc.preprocessingassembler.symbols.DefSymbols>
+  <armgcc.compiler.optimization.level>Optimize (-O1)</armgcc.compiler.optimization.level>
+  <armgcc.compiler.optimization.DebugLevel>Maximum (-g3)</armgcc.compiler.optimization.DebugLevel>
   <armgcc.assembler.debugging.DebugLevel>Default (-g)</armgcc.assembler.debugging.DebugLevel>
-  <armgcc.preprocessingassembler.general.IncludePaths>
-    <ListValues>
-      <Value>%24(PackRepoDir)\atmel\SAMD10_DFP\1.0.24\include</Value>
-      <Value>%24(PackRepoDir)\arm\cmsis\4.2.0\CMSIS\Include\</Value>
-      <Value>../</Value>
-      <Value>../utils/include</Value>
-      <Value>../hal/hpl/include</Value>
-      <Value>../hal/hpl/sercom</Value>
-      <Value>../Config</Value>
-      <Value>../hal/hri</Value>
-      <Value>../hal/hpl/sysctrl</Value>
-      <Value>../hal/include</Value>
-      <Value>../hal/hpl/tc</Value>
-      <Value>../hal/hpl/pm</Value>
-      <Value>../hal/hpl/dac</Value>
-      <Value>../hal/hpl/core</Value>
-      <Value>../hal/hpl/eic</Value>
-      <Value>../hal/hpl/tcc</Value>
-      <Value>../hal/hpl/port</Value>
-      <Value>../hal/hpl/gclk</Value>
-      <Value>../stdio_redirect</Value>
-    </ListValues>
-  </armgcc.preprocessingassembler.general.IncludePaths>
-  <armgcc.preprocessingassembler.symbols.DefSymbols>
-    <ListValues>
-      <Value>ARM_MATH_CM0PLUS=true</Value>
-    </ListValues>
-  </armgcc.preprocessingassembler.symbols.DefSymbols>
   <armgcc.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcc.preprocessingassembler.debugging.DebugLevel>
 </ArmGcc>
     </ToolchainSettings>
@@ -644,6 +522,9 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="osc.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="stdio_redirect\gcc\read.c">
       <SubType>compile</SubType>
     </Compile>
@@ -763,6 +644,11 @@
     <ProjectReference Include="..\modulation\modulation.cproj">
       <Name>modulation</Name>
       <Project>{4ec09685-2fab-4f70-a3d7-e63b61ba4ff1}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\osc_parser\osc_parser.cproj">
+      <Name>osc_parser</Name>
+      <Project>{50987015-a6ef-46dd-9bea-ef88fcb0be8e}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

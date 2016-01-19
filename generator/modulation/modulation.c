@@ -78,10 +78,11 @@ void saw_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize) {
 void sine_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize) {
 	int i;
 	for (i=0;i<blockSize;i++) {
+		//find the value of the sine wave
+		//note that the parameter to arm_sin_q15 is scaled so that [0..1] cooresponds to [0..2*pi]
 		*waveOut = 	arm_sin_q15(*phaseIn);
-		//for some reason, when we substitute (*waveOut>>2), this doesn't work
-		//!!! this needs an efficient algorithm!
-		*waveOut = (*waveOut/2)+Q15_HALF;
+		//scale down the wave and shift it to the range [0..1]
+		*waveOut = (*waveOut>>1)+Q15_HALF;
 		
 		phaseIn++;
 		waveOut++;

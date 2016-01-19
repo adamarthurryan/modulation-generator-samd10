@@ -7,6 +7,13 @@ Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "generator", "generator\gene
 EndProject
 Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "modulation", "modulation\modulation.cproj", "{4EC09685-2FAB-4F70-A3D7-E63B61BA4FF1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{65E5C542-EDF6-4C5C-AF69-B32D2A461232}"
+	ProjectSection(SolutionItems) = preProject
+		osc.c = osc.c
+	EndProjectSection
+EndProject
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "osc_parser", "osc_parser\osc_parser.cproj", "{50987015-A6EF-46DD-9BEA-EF88FCB0BE8E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -21,6 +28,10 @@ Global
 		{4EC09685-2FAB-4F70-A3D7-E63B61BA4FF1}.Debug|ARM.Build.0 = Debug|ARM
 		{4EC09685-2FAB-4F70-A3D7-E63B61BA4FF1}.Release|ARM.ActiveCfg = Release|ARM
 		{4EC09685-2FAB-4F70-A3D7-E63B61BA4FF1}.Release|ARM.Build.0 = Release|ARM
+		{50987015-A6EF-46DD-9BEA-EF88FCB0BE8E}.Debug|ARM.ActiveCfg = Debug|ARM
+		{50987015-A6EF-46DD-9BEA-EF88FCB0BE8E}.Debug|ARM.Build.0 = Debug|ARM
+		{50987015-A6EF-46DD-9BEA-EF88FCB0BE8E}.Release|ARM.ActiveCfg = Release|ARM
+		{50987015-A6EF-46DD-9BEA-EF88FCB0BE8E}.Release|ARM.Build.0 = Release|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
