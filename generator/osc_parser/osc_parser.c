@@ -46,9 +46,9 @@ osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMe
 		return osc_parse_error("Invalid command: incorrect [address,type] format");
 	}
 		
-	oscMessage->hasTypeSig = (numSignatureParts==2);
-	oscMessage->typeSig = signatureParts[1];
-	oscMessage->typeSigLength = signaturePartLengths[1];
+	oscMessage->hasTypeTag = (numSignatureParts==2);
+	oscMessage->typeTag = signatureParts[1];
+	oscMessage->typeTagLength = signaturePartLengths[1];
 		
 		
 	oscMessage->numAddrParts = split_string(signatureParts[0], signaturePartLengths[0], '/', oscMessage->addrParts, oscMessage->addrPartLengths, MAX_CMD_ADDR_PARTS);

@@ -287,9 +287,9 @@ int main(void)
 				usart_write(oscCommand.addrParts[i], oscCommand.addrPartLengths[i]);
 			}
 			
-			if (oscCommand.hasTypeSig) {
+			if (oscCommand.hasTypeTag) {
 				usart_write_0(",");
-				usart_write(oscCommand.typeSig, oscCommand.typeSigLength);
+				usart_write(oscCommand.typeTag, oscCommand.typeTagLength);
 			}
 			
 			for (int i=0;i<oscCommand.numArguments;i++) {
