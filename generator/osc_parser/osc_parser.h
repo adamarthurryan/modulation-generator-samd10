@@ -23,15 +23,15 @@ typedef struct {
 	char * addrParts[MAX_CMD_ADDR_PARTS];
 	int addrPartLengths[MAX_CMD_ADDR_PARTS];
 	int numAddrParts;
-	char * params[MAX_CMD_PARTS-1];
-	int paramLengths[MAX_CMD_PARTS-1];
-	int numParams;
-	int hasTypeSig;
-	char * typeSig;
-	int typeSigLength;
-} osc_command_t;
+	char * arguments[MAX_CMD_PARTS-1];
+	int argumentLengths[MAX_CMD_PARTS-1];
+	int numArguments;
+	int hasTypeTag;
+	char * typeTag;
+	int typeTagLength;
+} osc_message_t;
 
-osc_parser_result_t osc_parse(char * line, int lineLength, osc_command_t * command);
+osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * command);
 int split_string(char * buffer, int length, char delimiter, char ** parts, int * partLengths, int maxParts);
 
 

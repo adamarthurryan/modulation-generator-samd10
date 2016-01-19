@@ -25,7 +25,7 @@ osc_parser_result_t osc_parse_success() {
 	return result;
 }
 
-osc_parser_result_t osc_parse(char * line, int lineLength, osc_command_t * oscCommand) {
+osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMessage) {
 		
 	char * parts[MAX_CMD_PARTS];
 	int partLengths[MAX_CMD_PARTS];
@@ -46,24 +46,24 @@ osc_parser_result_t osc_parse(char * line, int lineLength, osc_command_t * oscCo
 		return osc_parse_error("Invalid command: incorrect [address,type] format");
 	}
 		
-	oscCommand->hasTypeSig = (numSignatureParts==2);
-	oscCommand->typeSig = signatureParts[1];
-	oscCommand->typeSigLength = signaturePartLengths[1];
+	oscMessage->hasTypeSig = (numSignatureParts==2);
+	oscMessage->typeSig = signatureParts[1];
+	oscMessage->typeSigLength = signaturePartLengths[1];
 		
 		
-	oscCommand->numAddrParts = split_string(signatureParts[0], signaturePartLengths[0], '/', oscCommand->addrParts, oscCommand->addrPartLengths, MAX_CMD_ADDR_PARTS);
+	oscMessage->numAddrParts = split_string(signatureParts[0], signaturePartLengths[0], '/', oscMessage->addrParts, oscMessage->addrPartLengths, MAX_CMD_ADDR_PARTS);
 		
-	if (oscCommand->numAddrParts==0) {
+	if (oscMessage->numAddrParts==0) {
 		return osc_parse_error("Invalid command: no address");
 	}
-	else if (oscCommand->numAddrParts<-1) {
+	else if (oscMessage->numAddrParts<-1) {
 		return osc_parse_error("Invalid command: too many address parts");
 	}
 
-	memcpy(oscCommand->params, parts+1, (MAX_CMD_PARTS-1)*sizeof(char *));
-	memcpy(oscCommand->paramLengths, partLengths+1, (MAX_CMD_PARTS-1)*sizeof(int *));
+	memcpy(oscMessage->arguments, parts+1, (MAX_CMD_PARTS-1)*sizeof(char *));
+	memcpy(oscMessage->argumentLengths, partLengths+1, (MAX_CMD_PARTS-1)*sizeof(int *));
 		
-	oscCommand->numParams = numParts - 1;
+	oscMessage->numArguments = numParts - 1;
 		
 	return osc_parse_success();
 }

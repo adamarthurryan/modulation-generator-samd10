@@ -268,7 +268,7 @@ int main(void)
 	//pwm_enable(&PWM_0);
 
 	while(1) {
-		osc_command_t oscCommand;
+		osc_message_t oscCommand;
 		
 		char line[MAX_CMD_LINE_LENGTH];
 		int lineLength = usart_read_line(line, MAX_CMD_LINE_LENGTH, true);
@@ -292,9 +292,9 @@ int main(void)
 				usart_write(oscCommand.typeSig, oscCommand.typeSigLength);
 			}
 			
-			for (int i=0;i<oscCommand.numParams;i++) {
+			for (int i=0;i<oscCommand.numArguments;i++) {
 				usart_write_0(" ");
-				usart_write(oscCommand.params[i], oscCommand.paramLengths[i]);
+				usart_write(oscCommand.arguments[i], oscCommand.argumentLengths[i]);
 			}
 			
 			usart_write_0("\n");
