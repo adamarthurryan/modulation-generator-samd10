@@ -522,9 +522,6 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="osc.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="stdio_redirect\gcc\read.c">
       <SubType>compile</SubType>
     </Compile>
