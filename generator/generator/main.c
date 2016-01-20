@@ -1,10 +1,10 @@
 #include "atmel_start.h"
 #include "atmel_start_pins.h"
-#include "stdio_start.h"
 
 #include "modulation.h"
 #include "osc_parser.h"
 
+#include "serial_io.h"
 #include "systick.h"
 
 #define MAX_CMD_LINE_LENGTH 96
@@ -72,53 +72,7 @@ void sampleTimer_configure(void)
 	timer_start(&TIMER_0);
 }
 
-struct io_descriptor *io;
-/** Writes the given number of characters from the buffer.*/
-void usart_write(char * string, uint16_t length) {
-	io_write(io, (uint8_t *)string, length);
-}
 
-/** Writes a null-terminated string (eg. a string literal) */
-void usart_write_0(char * string) {
-	usart_write(string, strlen(string));
-}
-/** Reads a line of text from the io stream, up to the given length.
-	
-	If echo is true, the characters will be echoed back as they are received.
-
-	Returns the number of characters in the line, not including the newline character.
-	Returns -1 if the buffer overflows
-*/	
-int usart_read_line(char * buffer, int length, int echo) {
-	int count = 0;
-	while (true) {
-		int read = io_read(io, buffer, 1);
-		if (read==1 && (*buffer == '\n' || *buffer == '\r' ) ) {
-			if (echo)
-				io_write(io,"\n", 1);
-			return count;
-		}
-		
-		if (echo)
-			io_write(io,buffer, 1);
-			
-		count++;
-		
-		if (count>=length)
-			return -1;
-			
-		buffer++;
-	}
-}
-int usart_read_char(char * buffer) {
-	return io_read(io, buffer, 1);
-}
-
-
-void usart_configure() {
-	usart_sync_get_io_descriptor(&USART_0, &io);
-	usart_sync_enable(&USART_0);
-}
 
 // ================
 
@@ -145,12 +99,8 @@ void dsp_run_block (int i) {
 	phasor_model_t phasor_model_b = create_phasor_model(33, SAMPLE_RATE);
 	phasor_q15(&phasor_model_b, &phasor_state_b, scratch2, SAMPLE_BUFFER_SIZE);
 	sine_q15(scratch2, scratch2, SAMPLE_BUFFER_SIZE);
-	sine_q15(scratch2, scratch3, SAMPLE_BUFFER_SIZE);
-	sine_q15(scratch2, scratch3, SAMPLE_BUFFER_SIZE);
-	sine_q15(scratch2, scratch3, SAMPLE_BUFFER_SIZE);
-	sine_q15(scratch2, scratch3, SAMPLE_BUFFER_SIZE);
 					
-	mix2_q15(scratch1, scratch1, samples[i], SAMPLE_BUFFER_SIZE);
+	mix2_q15(scratch1, scratch2, samples[i], SAMPLE_BUFFER_SIZE);
 	endTicks = systick_read();
 
 	//printf("phasor_model.phase_step=%d calculated in %u systicks\n", phasor_model.phaseStep, startTicks-endTicks);
@@ -159,34 +109,6 @@ void dsp_run_block (int i) {
 }
 
 
-//parameters table
-/**/
-/*
-char * parameter_names[] = {
-"/lfo/1/frequency",
-"/lfo/1/shape",
-"/lfo/1/duty",
-"/lfo/2/frequency",
-"/lfo/2/shape",
-"/lfo/2/duty",
-"/env/1/attack",
-"/env/1/decay",
-"/env/1/release",
-"/env/1/sustain",
-"/env/2/attack",
-"/env/2/decay",
-"/env/2/release",
-"/env/2/sustain",
-"/mix/1/lfo/1",
-"/mix/1/lfo/2",
-"/mix/1/env/1",
-"/mix/1/env/2",
-"/mix/2/lfo/1",
-"/mix/2/lfo/2",
-"/mix/2/env/1"
-"/mix/2/env/2"
-};
-*/
 typedef struct {
 	float frequency;
 	int shape;
@@ -216,33 +138,26 @@ struct {
 	mix_parameters_t mix2;
 } parameters;
 
-/*
-void * [] parameter_ptrs {
-	&(lfo1.frequency),
-	&(lfo1.shape),
-	&(lfo1.duty),
-	&(lfo2.frequency),
-	&(lfo2.shape),
-	&(lfo2.duty),
-	&(env1.attack),
-	&(env1.decay),
-	&(env1.release),
-	&(env1.sustain),
-	&(env2.attack),
-	&(env2.decay),
-	&(env2.release),
-	&(env2.sustain),
-	&(mix1.lfo1),
-	&(mix1.lfo2),
-	&(mix1.env1),
-	&(mix1.env2),
-	&(mix2.lfo1),
-	&(mix2.lfo2),
-	&(mix2.env1),
-	&(mix2.env2),
-};*/
 
 // ======
+
+void simple_ftos(char * buffer, int size, float value) {
+	//do simple_itos on the integer part
+	//then multiply the fractional part by, say 1000000 and do it again
+	
+}
+
+void simple_itos(char * buffer, int size, int value) {
+	if (value<0) {
+		value = -value;
+		*buffer = '-';
+		buffer++;
+		size--;
+	}
+	while (value > 0 && size) {
+		...
+	}
+}
 
 
 
@@ -253,14 +168,14 @@ int main(void)
 	
 	dac_configure();
 	sampleTimer_configure();
-	usart_configure();
+	serial_configure();
 	dsp_configure();
 	
 	//STDIO_REDIRECT_0_init();
 	
 	//STDIO_REDIRECT_0_example();
 	
-	usart_write("Modulation Generator\n", 21);
+	serial_write("Modulation Generator\n", 21);
 	
 
 
@@ -271,33 +186,51 @@ int main(void)
 		osc_message_t oscCommand;
 		
 		char line[MAX_CMD_LINE_LENGTH];
-		int lineLength = usart_read_line(line, MAX_CMD_LINE_LENGTH, true);
+		int lineLength = serial_read_line(line, MAX_CMD_LINE_LENGTH, true);
 
 		osc_parser_result_t parserResult = osc_parse(line, lineLength, &oscCommand);
 		
 		if (parserResult.hasError){
-			usart_write_0("Parse error: ");
-			usart_write(parserResult.errorMessage, parserResult.errorMessageLength);
-			usart_write("\n",1);
+			serial_write_const("Parse error: ");
+			serial_write(parserResult.errorMessage, parserResult.errorMessageLength);
+			serial_write("\n",1);
 		}
 		else {
-			usart_write_0("Command received: ");
+			serial_write_const("Command received: ");
 			for (int i=0;i<oscCommand.numAddrParts;i++) {
-				usart_write_0("/");
-				usart_write(oscCommand.addrParts[i], oscCommand.addrPartLengths[i]);
+				serial_write_const("/");
+				serial_write(oscCommand.addrParts[i], oscCommand.addrPartLengths[i]);
 			}
-			
+			/*
 			if (oscCommand.hasTypeTag) {
-				usart_write_0(",");
-				usart_write(oscCommand.typeTag, oscCommand.typeTagLength);
+				serial_write_const(",");
+				serial_write(oscCommand.typeTag, oscCommand.typeTagLength);
 			}
+			*/
 			
 			for (int i=0;i<oscCommand.numArguments;i++) {
-				usart_write_0(" ");
-				usart_write(oscCommand.arguments[i], oscCommand.argumentLengths[i]);
+				serial_write_const(" ");
+				if (oscCommand.argumentTypes[i] == FLOAT) {
+					serial_write_const("f:");
+
+					char buf[24];
+					simple_ftos(buf, 13, oscCommand.argumentValues[i].floatArg);
+					serial_write(buf, strlen(buf));
+				}
+				else if (oscCommand.argumentTypes[i] == INT) {
+					serial_write_const("i:");
+
+					char buf[13];
+					simple_itos(buf, 13, oscCommand.argumentValues[i].intArg);
+					serial_write(buf, strlen(buf));
+				}
+				else  {
+					serial_write_const("s:");
+					serial_write(oscCommand.arguments[i], oscCommand.argumentLengths[i]);					
+				}
 			}
 			
-			usart_write_0("\n");
+			serial_write_const("\n");
 		}
 	}
 }
