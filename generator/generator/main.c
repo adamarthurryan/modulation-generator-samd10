@@ -1,9 +1,17 @@
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <arm_math.h>
+
 #include "atmel_start.h"
 #include "atmel_start_pins.h"
 
+#include "q16d15.h"
+#include "synth_parameters.h"
+#include "simple_strnum.h"
 #include "modulation.h"
 #include "osc_parser.h"
-
+#include "osc_interpreter.h"
 #include "serial_io.h"
 #include "systick.h"
 
@@ -19,6 +27,10 @@ volatile int sample_index = 0;
 
 static struct timer_task sampleTimer_task1;
 static struct timer_task sampleTimer_dsp_task1;
+
+volatile synth_parameters_t synth_parameters;
+
+void dsp_run_block (int i);
 
 /**Write an unsigned signal to the dac.
 	* Negative values will not render correctly.*/
@@ -90,13 +102,14 @@ void dsp_configure() {
 	phasor_state_b = initialize_phasor_state();
 }
 
+
 void dsp_run_block (int i) {
 	startTicks = systick_read();
-	phasor_model_t phasor_model_a = create_phasor_model(10, SAMPLE_RATE);
+	phasor_model_t phasor_model_a = create_phasor_model(synth_parameters.lfo[0].frequency, SAMPLE_RATE);
 	phasor_q15(&phasor_model_a, &phasor_state_a, scratch1, SAMPLE_BUFFER_SIZE);
 	sine_q15( scratch1, scratch1, SAMPLE_BUFFER_SIZE);
 
-	phasor_model_t phasor_model_b = create_phasor_model(33, SAMPLE_RATE);
+	phasor_model_t phasor_model_b = create_phasor_model(synth_parameters.lfo[1].frequency, SAMPLE_RATE);
 	phasor_q15(&phasor_model_b, &phasor_state_b, scratch2, SAMPLE_BUFFER_SIZE);
 	sine_q15(scratch2, scratch2, SAMPLE_BUFFER_SIZE);
 					
@@ -109,54 +122,46 @@ void dsp_run_block (int i) {
 }
 
 
-typedef struct {
-	float frequency;
-	int shape;
-	float duty;
-} lfo_parameters_t;
-
-typedef struct {
-	int attack;
-	int decay;
-	int release;
-	float sustain;
-} env_parameters_t;
-
-typedef struct {
-	float lfo1;
-	float lfo2;
-	float env1;	
-	float env2;
-} mix_parameters_t;
-
-struct {
-	lfo_parameters_t lfo1;
-	lfo_parameters_t lfo2;
-	env_parameters_t env1;
-	env_parameters_t env2;
-	mix_parameters_t mix1;
-	mix_parameters_t mix2;
-} parameters;
 
 
 // ======
 
-void simple_ftos(char * buffer, int size, float value) {
-	//do simple_itos on the integer part
-	//then multiply the fractional part by, say 1000000 and do it again
-	
-}
 
-void simple_itos(char * buffer, int size, int value) {
-	if (value<0) {
-		value = -value;
-		*buffer = '-';
-		buffer++;
-		size--;
+void osc_message_write(osc_message_t oscMessage) {
+	for (int i=0;i<oscMessage.numAddrParts;i++) {
+		serial_write_const("/");
+		serial_write(oscMessage.addrParts[i], oscMessage.addrPartLengths[i]);
 	}
-	while (value > 0 && size) {
-		...
+	/*
+	if (oscCommand.hasTypeTag) {
+		serial_write_const(",");
+		serial_write(oscCommand.typeTag, oscCommand.typeTagLength);
 	}
+	*/
+
+	for (int i=0;i<oscMessage.numArguments;i++) {
+		serial_write_const(" ");
+		if (oscMessage.argumentTypes[i] == Q) {
+			serial_write_const("f:");
+
+			char buf[24];
+			q16d15_t value = oscMessage.argumentValues[i].qArg;
+			simple_qtos(buf, 13, value, 3);
+			serial_write(buf, strlen(buf));
+		}
+		else if (oscMessage.argumentTypes[i] == INT) {
+			serial_write_const("i:");
+
+			char buf[13];
+			simple_itos(buf, 13, oscMessage.argumentValues[i].intArg);
+			serial_write(buf, strlen(buf));
+		}
+		else  {
+			serial_write_const("s:");
+			serial_write(oscMessage.argumentValues[i].stringArg, strlen(oscMessage.argumentValues[i].stringArg));					
+		}
+	}
+	serial_write_const("\n");
 }
 
 
@@ -183,12 +188,12 @@ int main(void)
 	//pwm_enable(&PWM_0);
 
 	while(1) {
-		osc_message_t oscCommand;
+		osc_message_t oscMessage;
 		
 		char line[MAX_CMD_LINE_LENGTH];
 		int lineLength = serial_read_line(line, MAX_CMD_LINE_LENGTH, true);
 
-		osc_parser_result_t parserResult = osc_parse(line, lineLength, &oscCommand);
+		osc_parser_result_t parserResult = osc_parse(line, lineLength, &oscMessage);
 		
 		if (parserResult.hasError){
 			serial_write_const("Parse error: ");
@@ -197,40 +202,9 @@ int main(void)
 		}
 		else {
 			serial_write_const("Command received: ");
-			for (int i=0;i<oscCommand.numAddrParts;i++) {
-				serial_write_const("/");
-				serial_write(oscCommand.addrParts[i], oscCommand.addrPartLengths[i]);
-			}
-			/*
-			if (oscCommand.hasTypeTag) {
-				serial_write_const(",");
-				serial_write(oscCommand.typeTag, oscCommand.typeTagLength);
-			}
-			*/
-			
-			for (int i=0;i<oscCommand.numArguments;i++) {
-				serial_write_const(" ");
-				if (oscCommand.argumentTypes[i] == FLOAT) {
-					serial_write_const("f:");
+			osc_message_write(oscMessage);			
+			osc_message_interpret(oscMessage);
 
-					char buf[24];
-					simple_ftos(buf, 13, oscCommand.argumentValues[i].floatArg);
-					serial_write(buf, strlen(buf));
-				}
-				else if (oscCommand.argumentTypes[i] == INT) {
-					serial_write_const("i:");
-
-					char buf[13];
-					simple_itos(buf, 13, oscCommand.argumentValues[i].intArg);
-					serial_write(buf, strlen(buf));
-				}
-				else  {
-					serial_write_const("s:");
-					serial_write(oscCommand.arguments[i], oscCommand.argumentLengths[i]);					
-				}
-			}
-			
-			serial_write_const("\n");
 		}
 	}
 }

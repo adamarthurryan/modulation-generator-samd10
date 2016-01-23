@@ -1,21 +1,27 @@
-#include "modulation.h"
 
 #include <stdint.h>
 #include <arm_math.h>
 
+#include "q16d15.h"
+
+#include "modulation.h"
+
 q15_t scratch1_q15[MAX_BLOCK_SIZE];
 q15_t scratch2_q15[MAX_BLOCK_SIZE];
 
+
 //#define CLIPQ63_TO_Q31(x) ((q31_t) ((x >> 32) != ((q31_t) x >> 31)) ?	((0x7FFFFFFF ^ ((q31_t) (x >> 63)))) : (q31_t) x)
 
-phasor_model_t create_phasor_model(float frequency, uint16_t sampleRate) {
-	float step = frequency/sampleRate;
+phasor_model_t create_phasor_model(q16d15_t frequency, uint16_t sampleRate) {
+	int64_t freq64 = ((int64_t) frequency)<<32;
+	int64_t step64 = freq64/sampleRate;
+	
 	phasor_model_t model;
 	
 //wow, this brings in a lot of extra code! like 3 or 4 KB!
 //	model.phaseStep=clip_q63_to_q31((q63_t) (period * 2147483648.0f));
 
-	model.phaseStep = F32_TO_Q31(step);
+	model.phaseStep = step64>>16;
 //	arm_float_to_q31(&step, &(model.phaseStep), 1);
 	return model;
 }

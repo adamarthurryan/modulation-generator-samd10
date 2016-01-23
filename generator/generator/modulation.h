@@ -11,6 +11,7 @@
 #define Q15_HALF (1<<14)
 #define Q15_MIN (1<<15)
 #define F32_TO_Q31(f32) (q31_t) ((f32-(int)f32)*2147483648.0f) //?
+#define F32_TO_Q15D16(f32) (int32_t) ((f32)*32768.0f) //?
 
 #define ARM_MATH_CM0PLUS true
 
@@ -23,6 +24,8 @@
 //at q15 and 1102 Hz sample rate, the frequency range is limited to 0.02 Hz to 501 Hz
 
 //for modulation generating, we should be able to use a sample rate of 11025
+
+
 
 typedef struct {
 	q31_t phaseStep;
@@ -44,7 +47,7 @@ typedef struct {
 	enum {STATE_A,STATE_D,STATE_R} mode;
 } adsr_state_t;
 
-phasor_model_t create_phasor_model(float frequency, uint16_t sampleRate);
+phasor_model_t create_phasor_model(q16d15_t frequency, uint16_t sampleRate);
 adsr_model_t create_adsr_model(uint16_t attackMs, uint16_t decayMs, uint16_t releaseMs, float sustain, uint16_t sampleRate);
 
 phasor_state_t initialize_phasor_state();

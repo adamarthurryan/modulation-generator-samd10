@@ -6,8 +6,8 @@
  */ 
 
 
-#ifndef SERIAL_IO._H_
-#define SERIAL_IO._H_
+#ifndef SERIAL_IO_H_
+#define SERIAL_IO_H_
 
 #include <stdint.h>
 
@@ -33,4 +33,4 @@ int serial_read_char(char * buffer) ;
 
 void serial_configure() ;
 
-#endif /* SERIAL_IO._H_ */
+#endif /* SERIAL_IO_H_ */

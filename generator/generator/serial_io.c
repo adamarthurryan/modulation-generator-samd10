@@ -24,12 +24,17 @@ int serial_read_line(char * buffer, int length, int echo) {
 	int count = 0;
 	while (true) {
 		int read = io_read(io, buffer, 1);
-		if (read==1 && (*buffer == '\n' || *buffer == '\r' ) ) {
+		if (read==1 && (*buffer == '\n') ) {
+			*buffer = '\0';
 			if (echo)
 				io_write(io,"\n", 1);
 			return count;
 		}
 		
+		//ignore the carriage return character
+		if (*buffer == '\r')
+			continue;
+			
 		if (echo)
 			io_write(io,buffer, 1);
 			
