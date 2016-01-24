@@ -14,6 +14,9 @@
       <description>Atmel Start</description>
       <select Dname="ATSAMD10D14AM" Dvendor="Atmel:3"/>
       <command>C:\Atmel\reconfigurator.exe -data C:\workspace\xx</command>
+      <files>
+        <file category="generator" name="atmel_start_config.json"/>
+      </files>
     </generator>
   </generators>
   <conditions>
@@ -72,8 +75,13 @@
       <require Cclass="HAL" Cgroup="HPL common" Csub="DAC Sync"/>
       <require Cclass="HAL" Cgroup="HPL" Csub="DAC"/>
     </condition>
-    <condition id="SAMD10">
-      <require Dfamily="SAMD10"/>
+    <condition id="NVMCTRL HPL requirements">
+      <require Cclass="Utils" Cgroup="Assert"/>
+      <require Cclass="Utils" Cgroup="Utils"/>
+      <require Cclass="HAL" Cgroup="HRI" Csub="NVMCTRL"/>
+      <require Cclass="HAL" Cgroup="HPL common" Csub="FLASH"/>
+      <require Cclass="HAL" Cgroup="HPL common" Csub="IRQ"/>
+      <require Cclass="HAL" Cgroup="HPL" Csub="Core"/>
     </condition>
     <condition id="HAL Ext IRQ requirements">
       <require Cclass="HAL" Cgroup="HPL common" Csub="Ext IRQ"/>
@@ -103,6 +111,12 @@
     <condition id="PM HPL requirements">
       <require Cclass="Utils" Cgroup="Assert"/>
       <require Cclass="HAL" Cgroup="HRI" Csub="PM"/>
+    </condition>
+    <condition id="HAL FLASH requirements">
+      <require Cclass="Utils" Cgroup="Assert"/>
+      <require Cclass="Utils" Cgroup="Utils"/>
+      <require Cclass="HAL" Cgroup="HPL common" Csub="FLASH"/>
+      <require Cclass="HAL" Cgroup="HPL" Csub="NVMCTRL"/>
     </condition>
     <condition id="HAL IO requirements">
       <require Cclass="Utils" Cgroup="Compiler"/>
@@ -143,6 +157,9 @@
     <condition id="HAL GPIO requirements">
       <require Cclass="HAL" Cgroup="HPL" Csub="PORT"/>
       <require Cclass="HAL" Cgroup="HPL common" Csub="GPIO"/>
+    </condition>
+    <condition id="SAMD10">
+      <require Dfamily="SAMD10"/>
     </condition>
     <condition id="Core HPL requirements">
       <require Cclass="Utils" Cgroup="Utils"/>
@@ -197,18 +214,6 @@
     <condition id="HPL common I2C Slave Sync requirements">
       <require Cclass="HAL" Cgroup="HPL common" Csub="I2C Slave"/>
     </condition>
-    <condition id="IAR dependency condition">
-      <require Tcompiler="IAR"/>
-    </condition>
-    <condition id="STDIO requirements">
-      <require Cclass="HAL" Cgroup="Driver" Csub="IO"/>
-    </condition>
-    <condition id="Keil dependency condition">
-      <require Tcompiler="ARMCC"/>
-    </condition>
-    <condition id="GCC dependency condition (Atmel:STDIO_redirect)">
-      <require Tcompiler="GCC"/>
-    </condition>
   </conditions>
   <components generator="AtmelStart">
     <component Cclass="AtmelStart" Cgroup="Framework" Cversion="1.0.0" condition="CMSIS Device Startup">
@@ -218,18 +223,17 @@
         <file category="source" name="atmel_start.c"/>
         <file category="header" name="atmel_start.h"/>
         <file category="header" name="atmel_start_pins.h"/>
-        <file category="source" name="stdio_start.c"/>
-        <file category="header" name="stdio_start.h"/>
         <file category="source" name="main.c"/>
         <file category="include" name=""/>
       </files>
     </component>
-    <component Cclass="Utils" Cgroup="List" Cversion="0.0.1" condition="Utils list requirements">
-      <description>List (linked list)</description>
+    <component Cclass="HAL" Cgroup="Driver" Csub="USART Sync" Cversion="0.0.1" condition="HAL USART sync requirements">
+      <description>This is the HAL synchronous USART driver</description>
       <files>
-        <file category="header" name="utils/include/utils_list.h"/>
-        <file category="include" name="utils/include"/>
-        <file category="source" name="utils/src/utils_list.c"/>
+        <file category="header" name="hal/include/hal_usart_sync.h"/>
+        <file category="include" name="hal/include"/>
+        <file category="source" name="hal/src/hal_usart_sync.c"/>
+        <file category="doc" name="documentation/usart_sync.rst"/>
       </files>
     </component>
     <component Cclass="Utils" Cgroup="Repeat macro" Cversion="0.0.1">
@@ -326,11 +330,20 @@
         <file attr="config" category="header" condition="SAMD10" name="config/hpl_sysctrl_v202_config.h"/>
       </files>
     </component>
-    <component Cclass="HAL" Cgroup="HRI" Csub="PORT" Cversion="0.0.1" condition="Common HRI requirements">
-      <description>This is the PORT low-level driver</description>
+    <component Cclass="HAL" Cgroup="Driver" Csub="FLASH" Cversion="0.0.1" condition="HAL FLASH requirements">
+      <description>This is the HAL FLASH driver</description>
       <files>
-        <file category="header" condition="SAMD10" name="hal/hri/hri_port_v100.h"/>
-        <file category="include" name="hal/hri"/>
+        <file category="header" name="hal/include/hal_flash.h"/>
+        <file category="include" name="hal/include"/>
+        <file category="source" name="hal/src/hal_flash.c"/>
+        <file category="doc" name="documentation/flash.rst"/>
+      </files>
+    </component>
+    <component Cclass="HAL" Cgroup="HPL common" Csub="Init" Cversion="0.0.1" condition="HPL common requirements">
+      <description>This is the common HPL DMA</description>
+      <files>
+        <file category="include" name="hal/hpl/include"/>
+        <file category="header" name="hal/hpl/include/hpl_init.h"/>
       </files>
     </component>
     <component Cclass="Utils" Cgroup="Compiler" Cversion="0.0.1" condition="Compiler requirements">
@@ -446,10 +459,10 @@
         <file category="header" name="hal/hpl/include/hpl_irq.h"/>
       </files>
     </component>
-    <component Cclass="HAL" Cgroup="HRI" Csub="SERCOM" Cversion="0.0.1" condition="Common HRI requirements">
-      <description>This is the Low-level SERCOM driver</description>
+    <component Cclass="HAL" Cgroup="HRI" Csub="SYSCTRL" Cversion="0.0.1" condition="Common HRI requirements">
+      <description>This is a low-level driver for system controller</description>
       <files>
-        <file category="header" condition="SAMD10" name="hal/hri/hri_sercom_v200.h"/>
+        <file category="header" condition="SAMD10" name="hal/hri/hri_sysctrl_v202.h"/>
         <file category="include" name="hal/hri"/>
       </files>
     </component>
@@ -469,13 +482,12 @@
         <file category="doc" name="documentation/dac_sync.rst"/>
       </files>
     </component>
-    <component Cclass="HAL" Cgroup="Driver" Csub="USART Sync" Cversion="0.0.1" condition="HAL USART sync requirements">
-      <description>This is the HAL synchronous USART driver</description>
+    <component Cclass="Utils" Cgroup="List" Cversion="0.0.1" condition="Utils list requirements">
+      <description>List (linked list)</description>
       <files>
-        <file category="header" name="hal/include/hal_usart_sync.h"/>
-        <file category="include" name="hal/include"/>
-        <file category="source" name="hal/src/hal_usart_sync.c"/>
-        <file category="doc" name="documentation/usart_sync.rst"/>
+        <file category="header" name="utils/include/utils_list.h"/>
+        <file category="include" name="utils/include"/>
+        <file category="source" name="utils/src/utils_list.c"/>
       </files>
     </component>
     <component Cclass="HAL" Cgroup="HPL" Csub="TCC" Cversion="0.0.1" condition="TCC HPL requirements">
@@ -496,25 +508,18 @@
         <file category="source" name="hal/src/hal_ext_irq.c"/>
       </files>
     </component>
-    <component Cclass="HAL" Cgroup="HRI" Csub="DAC" Cversion="0.0.1" condition="Common HRI requirements">
-      <description>This is the Low-level DAC driver</description>
+    <component Cclass="HAL" Cgroup="HRI" Csub="SERCOM" Cversion="0.0.1" condition="Common HRI requirements">
+      <description>This is the Low-level SERCOM driver</description>
       <files>
-        <file category="header" condition="SAMD10" name="hal/hri/hri_dac1_v110.h"/>
+        <file category="header" condition="SAMD10" name="hal/hri/hri_sercom_v200.h"/>
         <file category="include" name="hal/hri"/>
       </files>
     </component>
-    <component Cclass="HAL" Cgroup="HRI" Csub="SYSCTRL" Cversion="0.0.1" condition="Common HRI requirements">
-      <description>This is a low-level driver for system controller</description>
+    <component Cclass="HAL" Cgroup="HRI" Csub="PORT" Cversion="0.0.1" condition="Common HRI requirements">
+      <description>This is the PORT low-level driver</description>
       <files>
-        <file category="header" condition="SAMD10" name="hal/hri/hri_sysctrl_v202.h"/>
+        <file category="header" condition="SAMD10" name="hal/hri/hri_port_v100.h"/>
         <file category="include" name="hal/hri"/>
-      </files>
-    </component>
-    <component Cclass="HAL" Cgroup="HPL common" Csub="I2C Slave Async" Cversion="0.0.1" condition="HPL common I2C Slave Async requirements">
-      <description>This is the common HPL I2C Slave</description>
-      <files>
-        <file category="include" name="hal/hpl/include"/>
-        <file category="header" name="hal/hpl/include/hpl_i2c_s_async.h"/>
       </files>
     </component>
     <component Cclass="Utils" Cgroup="Syscalls" Cversion="0.0.1">
@@ -532,12 +537,18 @@
         <file category="header" name="hal/hpl/include/hpl_reset.h"/>
       </files>
     </component>
-    <component Cclass="HAL" Cgroup="HPL" Csub="PORT" Cversion="0.0.1" condition="PORT HPL requirements">
-      <description>This is the PORT HPL</description>
+    <component Cclass="HAL" Cgroup="HPL common" Csub="FLASH" Cversion="0.0.1" condition="HPL common requirements">
+      <description>This is the common HPL FLASH</description>
       <files>
-        <file category="include" name="hal/hpl/port"/>
-        <file category="header" name="hal/hpl/port/hpl_port_v100_base.inc"/>
-        <file category="source" condition="SAMD10" name="hal/hpl/port/hpl_port_v100.c"/>
+        <file category="include" name="hal/hpl/include"/>
+        <file category="header" name="hal/hpl/include/hpl_flash.h"/>
+      </files>
+    </component>
+    <component Cclass="HAL" Cgroup="HPL common" Csub="I2C Slave Async" Cversion="0.0.1" condition="HPL common I2C Slave Async requirements">
+      <description>This is the common HPL I2C Slave</description>
+      <files>
+        <file category="include" name="hal/hpl/include"/>
+        <file category="header" name="hal/hpl/include/hpl_i2c_s_async.h"/>
       </files>
     </component>
     <component Cclass="Utils" Cgroup="Error Codes" Cversion="0.0.1">
@@ -576,11 +587,18 @@
         <file category="header" name="hal/hpl/include/hpl_pwm.h"/>
       </files>
     </component>
-    <component Cclass="HAL" Cgroup="HPL common" Csub="Init" Cversion="0.0.1" condition="HPL common requirements">
-      <description>This is the common HPL DMA</description>
+    <component Cclass="HAL" Cgroup="HPL" Csub="PORT" Cversion="0.0.1" condition="PORT HPL requirements">
+      <description>This is the PORT HPL</description>
       <files>
-        <file category="include" name="hal/hpl/include"/>
-        <file category="header" name="hal/hpl/include/hpl_init.h"/>
+        <file category="include" name="hal/hpl/port"/>
+        <file category="source" condition="SAMD10" name="hal/hpl/port/hpl_port_v100.c"/>
+      </files>
+    </component>
+    <component Cclass="HAL" Cgroup="HRI" Csub="DAC" Cversion="0.0.1" condition="Common HRI requirements">
+      <description>This is the Low-level DAC driver</description>
+      <files>
+        <file category="header" condition="SAMD10" name="hal/hri/hri_dac1_v110.h"/>
+        <file category="include" name="hal/hri"/>
       </files>
     </component>
     <component Cclass="HAL" Cgroup="HPL" Csub="GCLK" Cversion="0.0.1" condition="GCLK HPL requirements">
@@ -598,6 +616,14 @@
       <files>
         <file category="header" condition="SAMD10" name="hal/hri/hri_nvmctrl_v107.h"/>
         <file category="include" name="hal/hri"/>
+      </files>
+    </component>
+    <component Cclass="HAL" Cgroup="HPL" Csub="NVMCTRL" Cversion="0.0.1" condition="NVMCTRL HPL requirements">
+      <description>This is the NVMCTRL HPL</description>
+      <files>
+        <file category="include" name="hal/hpl/nvmctrl"/>
+        <file category="source" condition="SAMD10" name="hal/hpl/nvmctrl/hpl_nvmctrl_v107.c"/>
+        <file attr="config" category="header" condition="SAMD10" name="config/hpl_nvmctrl_v107_config.h"/>
       </files>
     </component>
     <component Cclass="HAL" Cgroup="Driver" Csub="Atomic" Cversion="0.0.1" condition="HAL Atomic requirements">
@@ -701,23 +727,6 @@
       <files>
         <file category="include" name="hal/hpl/include"/>
         <file category="header" name="hal/hpl/include/hpl_ext_irq.h"/>
-      </files>
-    </component>
-    <component Cclass="STDIO" Cgroup="Redirect" Csub="IO" Cversion="0.0.1" condition="STDIO requirements">
-      <description>STDIO Redirect</description>
-      <files>
-        <file category="include" name="stdio_redirect"/>
-        <file category="header" name="stdio_redirect/stdio_io.h"/>
-        <file category="source" name="stdio_redirect/stdio_io.c"/>
-        <!-- GCC -->
-        <file category="source" condition="GCC dependency condition (Atmel:STDIO_redirect)" name="stdio_redirect/gcc/read.c"/>
-        <file category="source" condition="GCC dependency condition (Atmel:STDIO_redirect)" name="stdio_redirect/gcc/write.c"/>
-        <!-- IAR -->
-        <file category="source" condition="IAR dependency condition" name="stdio_redirect/iar/read.c"/>
-        <file category="source" condition="IAR dependency condition" name="stdio_redirect/iar/write.c"/>
-        <!-- Keil -->
-        <file category="source" condition="Keil dependency condition" name="stdio_redirect/keil/Retarget.c"/>
-        <file category="doc" name="documentation/stdio.rst"/>
       </files>
     </component>
   </components>

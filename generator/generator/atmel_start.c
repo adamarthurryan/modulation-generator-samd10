@@ -13,7 +13,6 @@
 #include <hpl_pm1_v201_base.h>
 #include <hpl_gclk1_v210_base.h>
 #include <peripheral_gclk_config.h>
-
 #if CONF_DMAC_MAX_USED_DESC > 0
 #endif
 
@@ -30,11 +29,13 @@ struct pwm_descriptor PWM_0;
 
 struct dac_sync_descriptor DAC_0;
 
+struct flash_descriptor FLASH_0;
+
 void USART_0_PORT_init(void)
 {
-	gpio_set_pin_mux(PA10, GPIO_MUX_C);
+	gpio_set_pin_function(PA10, PINMUX_PA10C_SERCOM0_PAD2);
 
-	gpio_set_pin_mux(PA11, GPIO_MUX_C);
+	gpio_set_pin_function(PA11, PINMUX_PA11C_SERCOM0_PAD3);
 }
 
 void USART_0_CLOCK_init(void)
@@ -87,7 +88,7 @@ void PWM_0_PORT_init(void)
 	        // <true"> High
 			false);
 
-	gpio_set_pin_mux(PA14, GPIO_MUX_F);
+	gpio_set_pin_function(PA14, PINMUX_PA14F_TCC0_WO0);
 
 	// Set pin direction to output
 	gpio_set_pin_direction(PA15, GPIO_DIRECTION_OUT);
@@ -99,7 +100,7 @@ void PWM_0_PORT_init(void)
 	        // <true"> High
 			false);
 
-	gpio_set_pin_mux(PA15, GPIO_MUX_F);
+	gpio_set_pin_function(PA15, PINMUX_PA15F_TCC0_WO1);
 
 	// Set pin direction to output
 	gpio_set_pin_direction(PA09, GPIO_DIRECTION_OUT);
@@ -111,7 +112,7 @@ void PWM_0_PORT_init(void)
 	        // <true"> High
 			false);
 
-	gpio_set_pin_mux(PA09, GPIO_MUX_E);
+	gpio_set_pin_function(PA09, PINMUX_PA09E_TCC0_WO3);
 }
 
 void PWM_0_CLOCK_init(void)
@@ -153,18 +154,18 @@ void EXTERNAL_IRQ_0_init(void)
 	        // <GPIO_PULL_DOWN"> Pull-down
 			GPIO_PULL_OFF);
 
-	gpio_set_pin_mux(PA25, GPIO_MUX_A);
+	gpio_set_pin_function(PA25, PINMUX_PA25A_EIC_EXTINT5);
 }
 
 void DAC_0_PORT_init(void)
 {
 	// Disable digital pin circuitry
 	gpio_set_pin_direction(PA02, GPIO_DIRECTION_OFF);
-	gpio_set_pin_mux(PA02, GPIO_MUX_B);
+	gpio_set_pin_function(PA02, PINMUX_PA02B_DAC_VOUT);
 
 	// Disable digital pin circuitry
 	gpio_set_pin_direction(PA03, GPIO_DIRECTION_OFF);
-	gpio_set_pin_mux(PA03, GPIO_MUX_B);
+	gpio_set_pin_function(PA03, PINMUX_PA03B_DAC_VREFP);
 }
 
 void DAC_0_CLOCK_init(void)
@@ -193,6 +194,42 @@ void DAC_0_example(void)
 		dac_sync_write(&DAC_0, 0, &i, 1);
 		i = ( i+1 ) % 1024;
 	}
+}
+
+void FLASH_0_CLOCK_init(void)
+{
+	_pm_enable_bus_clock(PM_BUS_APBB, NVMCTRL);
+}
+
+void FLASH_0_init(void)
+{
+	FLASH_0_CLOCK_init();
+	flash_init(&FLASH_0, NVMCTRL);
+}
+
+static uint8_t src_data[128];
+static uint8_t chk_data[128];
+
+/**
+ * Example of using FLASH_0 to read and write buffer.
+ */
+void FLASH_0_example(void)
+{
+	uint32_t page_size;
+	uint16_t i;
+
+	/* Init source data */
+	page_size = flash_get_page_size(&FLASH_0);
+
+	for(i = 0; i < page_size; i++) {
+		src_data[i] = i;
+	}
+
+	/* Write data to flash */
+	flash_write(&FLASH_0, 0x3200, src_data, page_size);
+
+	/* Read data from flash */
+	flash_read(&FLASH_0, 0x3200, chk_data, page_size);
 }
 
 void SERCOM0_Handler(void)
@@ -245,15 +282,6 @@ void DAC_Handler(void)
 	}
 }
 
-void GCLK_Handler(void)
-{
-	if (_irq_table[  +0 ]) {
-		_irq_table[  +0 ]->handler(_irq_table[  +0 ]->parameter);
-	} else {
-		Default_Handler();
-	}
-}
-
 void SYSCTRL_Handler(void)
 {
 	if (_irq_table[ SYSCTRL_IRQn + 0 ]) {
@@ -268,6 +296,16 @@ void PM_Handler(void)
 {
 	if (_irq_table[ PM_IRQn + 0 ]) {
 		_irq_table[ PM_IRQn + 0 ]->handler(_irq_table[ PM_IRQn + 0 ]->parameter);
+	} else {
+		Default_Handler();
+	}
+}
+
+void NVMCTRL_Handler(void)
+{
+	if (_irq_table[ NVMCTRL_IRQn + 0 ]) {
+		_irq_table[ NVMCTRL_IRQn + 0 ]->handler(
+				_irq_table[ NVMCTRL_IRQn + 0 ]->parameter);
 	} else {
 		Default_Handler();
 	}
@@ -321,4 +359,6 @@ void system_init(void)
 	EXTERNAL_IRQ_0_init();
 
 	DAC_0_init();
+
+	FLASH_0_init();
 }

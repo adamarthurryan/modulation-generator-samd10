@@ -127,10 +127,10 @@ void dsp_run_block (int i) {
 // ======
 
 
-void osc_message_write(osc_message_t oscMessage) {
-	for (int i=0;i<oscMessage.numAddrParts;i++) {
+void osc_message_write(osc_message_t * oscMessage) {
+	for (int i=0;i<oscMessage->numAddrParts;i++) {
 		serial_write_const("/");
-		serial_write(oscMessage.addrParts[i], oscMessage.addrPartLengths[i]);
+		serial_write(oscMessage->addrParts[i], oscMessage->addrPartLengths[i]);
 	}
 	/*
 	if (oscCommand.hasTypeTag) {
@@ -139,26 +139,26 @@ void osc_message_write(osc_message_t oscMessage) {
 	}
 	*/
 
-	for (int i=0;i<oscMessage.numArguments;i++) {
+	for (int i=0;i<oscMessage->numArguments;i++) {
 		serial_write_const(" ");
-		if (oscMessage.argumentTypes[i] == Q) {
+		if (oscMessage->argumentTypes[i] == Q) {
 			serial_write_const("f:");
 
 			char buf[24];
-			q16d15_t value = oscMessage.argumentValues[i].qArg;
+			q16d15_t value = oscMessage->argumentValues[i].qArg;
 			simple_qtos(buf, 13, value, 3);
 			serial_write(buf, strlen(buf));
 		}
-		else if (oscMessage.argumentTypes[i] == INT) {
+		else if (oscMessage->argumentTypes[i] == INT) {
 			serial_write_const("i:");
 
 			char buf[13];
-			simple_itos(buf, 13, oscMessage.argumentValues[i].intArg);
+			simple_itos(buf, 13, oscMessage->argumentValues[i].intArg);
 			serial_write(buf, strlen(buf));
 		}
 		else  {
 			serial_write_const("s:");
-			serial_write(oscMessage.argumentValues[i].stringArg, strlen(oscMessage.argumentValues[i].stringArg));					
+			serial_write(oscMessage->argumentValues[i].stringArg, strlen(oscMessage->argumentValues[i].stringArg));					
 		}
 	}
 	serial_write_const("\n");
@@ -193,7 +193,7 @@ int main(void)
 		char line[MAX_CMD_LINE_LENGTH];
 		int lineLength = serial_read_line(line, MAX_CMD_LINE_LENGTH, true);
 
-		osc_parser_result_t parserResult = osc_parse(line, lineLength, &oscMessage);
+		osc_result_t parserResult = osc_parse(line, lineLength, &oscMessage);
 		
 		if (parserResult.hasError){
 			serial_write_const("Parse error: ");
@@ -202,8 +202,8 @@ int main(void)
 		}
 		else {
 			serial_write_const("Command received: ");
-			osc_message_write(oscMessage);			
-			osc_message_interpret(oscMessage);
+			osc_message_write(&oscMessage);			
+			osc_message_interpret(&oscMessage);
 
 		}
 	}

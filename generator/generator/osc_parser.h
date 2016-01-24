@@ -25,15 +25,16 @@ typedef union {
 	int32_t intArg;
 //	float floatArg;
 	q16d15_t qArg;
-	char * stringArg;
+	const char * stringArg;
 } argument_value_t;
+
 
 typedef struct {
 	char * errorMessage;
 	int errorMessageLength;
 	int hasError;
 	
-} osc_parser_result_t;
+} osc_result_t;
 
 typedef struct {
 	char * addrParts[MAX_CMD_ADDR_PARTS];
@@ -50,6 +51,9 @@ typedef struct {
 	argument_type_t argumentTypes[MAX_CMD_PARTS-1];
 } osc_message_t;
 
-osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * command);
+osc_result_t osc_result_error(const char * errorMessage) ;
+osc_result_t osc_result_success();
+
+osc_result_t osc_parse(char * line, int lineLength, osc_message_t * command);
 
 #endif /* OSC_PARSER_H_ */

@@ -8,83 +8,120 @@
 #include "osc_parser.h"
 #include "osc_interpreter.h"
 
+
+/** Handler functions take an array of argumentValues and return a result.
+	The signature of the argument array has already been checked, 
+	so the handler can use the arguments without checking shape.
+	Similarly, the instance number is guaranteed to be within bounds.*/
+typedef osc_result_t(*osc_handler_t)(int, argument_value_t *);
+
+#define OSC_HANDLER(fn) osc_result_t fn(int instance, argument_value_t * args)
+
+OSC_HANDLER(lfoFreq) {
+	synth_parameters.lfo[instance].frequency = args[0].qArg;
+	return osc_result_success();
+}
+OSC_HANDLER(lfoShape) {
+	//synth_parameters.lfo[instance].shape = ...
+	return osc_result_error("Message handler not yet implemented");
+}
+OSC_HANDLER(lfoDuty) {
+	synth_parameters.lfo[instance].duty = args[0].qArg;
+	return osc_result_success();
+}
+
+OSC_HANDLER(envADSR) {
+	synth_parameters.env[instance].attack =  args[0].qArg;
+	synth_parameters.env[instance].decay =   args[1].qArg;
+	synth_parameters.env[instance].sustain = args[2].qArg;
+	synth_parameters.env[instance].release = args[3].qArg;
+	return osc_result_success();
+}
+
+OSC_HANDLER(envTrigger) {
+	return osc_result_error("Message handler not yet implemented");	
+}
+
+OSC_HANDLER(mixLFO) {
+	synth_parameters.mix[instance].lfo[0] =   args[0].qArg;
+	synth_parameters.mix[instance].lfo[1] =   args[1].qArg;
+	return osc_result_success();
+}
+OSC_HANDLER(mixEnv) {
+	synth_parameters.mix[instance].env[0] =   args[0].qArg;
+	synth_parameters.mix[instance].env[1] =   args[1].qArg;
+	return osc_result_success();
+}
+
+
+int numModules = 3;
+const char modules[3][4] = {{"lfo"}, {"env"}, {"mix"}};
+int numInstances[3] = {2,2,2};
+int numMessages[3] = {3,2,2};
+const char messages[3][3][6] = {{{"freq"}, {"shape"}, {"duty"}}, {{"adsr"}, {"trig"}}, {{"lfo"}, {"env"}}};
+const char signatures[3][3][5] = {{{"f"}, {"s"}, {"f"}}, {{"ffff"}, {"i"}}, {{"ff"}, {"ff"}}};
+osc_handler_t handlers[3][3] = {{&lfoFreq,&lfoShape,&lfoDuty},{&envADSR,&envTrigger},{&mixLFO,&mixEnv}};
+
+
 typedef enum {
 	LFO, ENV, MIX
 } module_select_t;
 
-typedef enum {
-	FREQ, SHAPE, DUTY
-} lfo_param_select_t;
-
-typedef enum {
-	ATTACK, DECAY, SUSTAIN, RELEASE
-} env_param_select_t;
-
-typedef enum {
-	LFO0, LFO1, ENV0, ENV1
-} mix_param_select_t;
-
-typedef union {
-	lfo_param_select_t lfoParam;
-	env_param_select_t envParam;
-	mix_param_select_t mixParam;
-} param_select_t;
-
-void osc_apply_message_lfo(int moduleInstance, lfo_param_select_t param, osc_message_t oscMessage) {
-	lfo_shape_t shape;
-	
-	switch(param) {
-		case FREQ:
-			//!!! assert single q arg > 0
-			synth_parameters.lfo[moduleInstance].frequency = oscMessage.argumentValues[0].qArg;
-			break;
-		case SHAPE:
-			//!!! assert single string arg
-			//!!! determine shape
-			shape = SINE;
-			synth_parameters.lfo[moduleInstance].shape = shape;
-			break;
-		case DUTY:
-			//!!! assert single q arg between 0 and 1
-			synth_parameters.lfo[moduleInstance].duty = (q15_t) (oscMessage.argumentValues[0].qArg);
-			break;
+/** Returns the module index or -1 if no match.*/
+int getModuleIndex(char * addr, int length) {
+	for (int i=0; i<numModules; i++) {
+		if (strncmp(addr, modules[i], length)==0)
+		return i;
 	}
-}
-void osc_apply_message_env(int moduleInstance, env_param_select_t param, osc_message_t oscMessage) {
-}
-void osc_apply_message_mix(int moduleInstance, mix_param_select_t param, osc_message_t oscMessage) {
+	return -1;
 }
 
-void osc_apply_message(module_select_t module, int moduleInstance, param_select_t param, osc_message_t oscMessage) {
-	switch (module) {
-		case LFO:
-			osc_apply_message_lfo(moduleInstance, param.lfoParam, oscMessage);
-			break;
-		case ENV:
-			osc_apply_message_lfo(moduleInstance, param.envParam, oscMessage);
-			break;
-		case MIX:
-			osc_apply_message_lfo(moduleInstance, param.mixParam, oscMessage);
-			break;
+/** Returns the message index or -1 if no match.*/
+int getMessageIndex(int moduleIndex, char * addr, int length) {
+	for (int i=0; i<numMessages[moduleIndex]; i++) {
+		if (strncmp(addr, messages[moduleIndex][i], length)==0)
+			return i;
 	}
+	return -1;	
 }
 
-void osc_message_interpret(osc_message_t oscMessage) {
-	//!!! assert 3 addr parts
+/** Returns true if the signature is correct.*/
+int checkMessageSignature(const char * signature, osc_message_t * oscMessage) {
+	int length  = strlen(signature);
+	if (length != oscMessage->numArguments)
+		return false;
+	return (strncmp(signature, oscMessage->typeTag, length) == 0);
+}
+
+osc_result_t osc_message_interpret(osc_message_t * oscMessage) {
+	if (oscMessage->numAddrParts != 3) {
+		return osc_result_error("Expected 3 address parts: module/instance/message");
+	}
 	
-	//first addr is module
-	//should be "lfo", "env" or "mix"
-	//!!!
-	module_select_t module = LFO;
+	//pick a module
+	int moduleIndex = getModuleIndex(oscMessage->addrParts[0], oscMessage->addrPartLengths[0]);
+	if (moduleIndex<0)
+		return osc_result_error("Unknown module address");
+		
+	//pick an instance
+	if (oscMessage->addrParts[1] != 1)
+		return osc_result_error("Expect a single-digit instance address number");
+		
+	int instance = oscMessage->addrParts[1][0]-'0';
+	//check instance bounds	
+	if (instance>=numInstances[moduleIndex] || instance<0)
+		return osc_result_error("Instance address out of range");
 	
-	//instance should be "0" or "1"
-	//!!! assert shape
-	int moduleInstance = oscMessage.addrParts[1][0] - '0';
+	//pick a message
+	int messageIndex = getMessageIndex(moduleIndex, oscMessage->addrParts[2], oscMessage->addrPartLengths[2]);
+	if (messageIndex<0)
+		return osc_result_error("Unknown message address");
+		
+	//check message signature
+	if (!checkMessageSignature(signatures[moduleIndex][messageIndex], oscMessage))
+		return osc_result_error("Incorrect message signature");
 	
-	//the allowed parameters depend on the module
-	param_select_t param;
-	param.lfoParam = FREQ;
-	
-	osc_apply_message(module, moduleInstance, param, oscMessage);
+	//call handler and return result
+	return (*handlers[moduleIndex][messageIndex])(instance, oscMessage->argumentValues);
 }
 

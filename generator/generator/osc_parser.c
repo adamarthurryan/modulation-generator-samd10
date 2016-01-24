@@ -15,21 +15,21 @@
 
 #include "osc_parser.h"
 
-osc_parser_result_t osc_parse_error(char * errorMessage) {
-	osc_parser_result_t result;
+osc_result_t osc_result_error(const char * errorMessage) {
+	osc_result_t result;
 	result.errorMessage = errorMessage;
 	result.errorMessageLength = strlen(errorMessage);
 	result.hasError = true;
 	return result;
 }
 
-osc_parser_result_t osc_parse_success() {
-	osc_parser_result_t result;
+osc_result_t osc_result_success() {
+	osc_result_t result;
 	result.hasError = false;
 	return result;
 }
 
-osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMessage) {
+osc_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMessage) {
 	
 	
 	//split the string into space-delimited parts
@@ -38,10 +38,10 @@ osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMe
 	int numParts = split_string(line, lineLength, ' ', parts,  partLengths, MAX_CMD_PARTS);
 		
 	if (numParts<-1) {
-		return osc_parse_error("Invalid command: too many parts");
+		return osc_result_error("Invalid command: too many parts");
 	}
 	else if (numParts==0)
-		return osc_parse_error("No command");
+		return osc_result_error("No command");
 
 	//break the type tag from the address
 	char * signatureParts[2];
@@ -49,7 +49,7 @@ osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMe
 	int numSignatureParts = split_string(parts[0], partLengths[0], ',', signatureParts, signaturePartLengths, 2);
 		
 	if (numSignatureParts!=2 && numSignatureParts!=1) {
-		return osc_parse_error("Invalid command: incorrect [address,type] format");
+		return osc_result_error("Invalid command: incorrect [address,type] format");
 	}
 		
 	oscMessage->hasTypeTag = (numSignatureParts==2);
@@ -61,10 +61,10 @@ osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMe
 	oscMessage->numAddrParts = split_string(signatureParts[0], signaturePartLengths[0], '/', oscMessage->addrParts, oscMessage->addrPartLengths, MAX_CMD_ADDR_PARTS);
 		
 	if (oscMessage->numAddrParts==0) {
-		return osc_parse_error("Invalid command: no address");
+		return osc_result_error("Invalid command: no address");
 	}
 	else if (oscMessage->numAddrParts<-1) {
-		return osc_parse_error("Invalid command: too many address parts");
+		return osc_result_error("Invalid command: too many address parts");
 	}
 
 	//copy the arguments parts
@@ -76,7 +76,7 @@ osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMe
 	
 	//if there is a typeTag part, ensure that there are as many types as arguments
 	if (oscMessage->hasTypeTag && oscMessage->typeTagLength != oscMessage->numArguments)
-		return osc_parse_error("Mismatch between type tag length and number of arguments");
+		return osc_result_error("Mismatch between type tag length and number of arguments");
 	
 	//finally iterate the arguments to create the argument values and number of arguments");
 	for (int i=0;i<oscMessage->numArguments;i++) {
@@ -89,10 +89,10 @@ osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMe
 			else if (oscMessage->typeTag[i] == 's')
 				oscMessage->argumentTypes[i] = STRING;
 			else
-				return osc_parse_error("Unknown type - should be one of f, i or s");
+				return osc_result_error("Unknown type - should be one of f, i or s");
 		}
 		else {
-			return osc_parse_error("Type detection not yet implemented, supply a type tag string");
+			return osc_result_error("Type detection not yet implemented, supply a type tag string");
 		}
 		
 		//parse the argument values
@@ -114,7 +114,7 @@ osc_parser_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMe
 			
 	}
 		
-	return osc_parse_success();
+	return osc_result_success();
 }
 		
 

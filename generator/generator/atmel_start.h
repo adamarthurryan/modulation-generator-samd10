@@ -24,12 +24,16 @@
 
 #include <hal_dac_sync.h>
 
+#include <hal_flash.h>
+
 	extern struct usart_sync_descriptor USART_0;
 	extern struct timer_descriptor TIMER_0;
 
 	extern struct pwm_descriptor PWM_0;
 
 	extern struct dac_sync_descriptor DAC_0;
+
+	extern struct flash_descriptor FLASH_0;
 
 	void USART_0_PORT_init(void);
 	void USART_0_CLOCK_init(void);
@@ -46,11 +50,17 @@
 	void DAC_0_init(void);
 	void DAC_0_example(void);
 
+	void FLASH_0_init(void);
+	void FLASH_0_example(void);
+	void FLASH_0_CLOCK_init(void);
+
 #define CONF_DMAC_MAX_USED_DESC ( /*SERCOM0*/ 0 + /*TC2*/ 0 + /*TCC0*/ 0 + \
-	        /*EIC*/ 0 + /*DAC*/ 0 + /*GCLK*/ 0 + /*SYSCTRL*/ 0 + /*PM*/ 0 )
+	        /*EIC*/ 0 + /*DAC*/ 0 + /*GCLK*/ 0 + /*SYSCTRL*/ 0 + /*PM*/ 0 +	\
+	        /*NVMCTRL*/ 0 )
 
 #define CONF_DMAC_MAX_USED_CH ( /*SERCOM0*/ 0 + /*TC2*/ 0 + /*TCC0*/ 0 + \
-	        /*EIC*/ 0 + /*DAC*/ 0 + /*GCLK*/ 0 + /*SYSCTRL*/ 0 + /*PM*/ 0 )
+	        /*EIC*/ 0 + /*DAC*/ 0 + /*GCLK*/ 0 + /*SYSCTRL*/ 0 + /*PM*/ 0 +	\
+	        /*NVMCTRL*/ 0 )
 
 	/**
 	 * \brief Perform system initialization, initialize pins and clocks for
