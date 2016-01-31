@@ -1,7 +1,7 @@
 #include "serial_io.h"
 
 #include "atmel_start.h"
-
+#include <string.h>
 struct io_descriptor *io;
 
 /** Writes the given number of characters from the buffer.*/
@@ -10,8 +10,8 @@ void serial_write(char * string, uint16_t length) {
 }
 
 /** Writes a null-terminated string (eg. a string literal) */
-void serial_write_const(char * string) {
-	serial_write(string, strlen(string));
+void serial_write_const(const char * string) {
+	io_write(io, (uint8_t *) string, strlen(string));
 }
 /** Reads a line of text from the io stream, up to the given length.
 	
@@ -23,11 +23,11 @@ void serial_write_const(char * string) {
 int serial_read_line(char * buffer, int length, int echo) {
 	int count = 0;
 	while (true) {
-		int read = io_read(io, buffer, 1);
+		int read = io_read(io, (uint8_t *) buffer, 1);
 		if (read==1 && (*buffer == '\n') ) {
 			*buffer = '\0';
 			if (echo)
-				io_write(io,"\n", 1);
+				serial_write_const("\n");
 			return count;
 		}
 		
@@ -36,7 +36,7 @@ int serial_read_line(char * buffer, int length, int echo) {
 			continue;
 			
 		if (echo)
-			io_write(io,buffer, 1);
+			io_write(io,(uint8_t *) buffer, 1);
 			
 		count++;
 		
@@ -47,7 +47,7 @@ int serial_read_line(char * buffer, int length, int echo) {
 	}
 }
 int serial_read_char(char * buffer) {
-	return io_read(io, buffer, 1);
+	return io_read(io, (uint8_t *) buffer, 1);
 }
 
 

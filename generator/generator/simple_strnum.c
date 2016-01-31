@@ -123,9 +123,9 @@ int simple_qtos(char * buffer, int size, q16d15_t value, int precision) {
 	if (itosLength==-1)
 		return -1;
 	
-	//erase the last null character
-	buffer +=itosLength-1;
-	length +=itosLength-1;
+	//the final null character is not returned in the length
+	buffer += itosLength;
+	length += itosLength;
 	
 	//add decimal point
 	if (size-length<1)
@@ -157,7 +157,8 @@ int simple_qtos(char * buffer, int size, q16d15_t value, int precision) {
 	//null terminate
 	*buffer = '\0';
 	
-	return length;
+	//but the final null is removed from the returned length
+	return length-1;
 }
 
 
@@ -189,7 +190,8 @@ int simple_itos(char * buffer, int size, int32_t value) {
 	
 	//add null
 	buffer[numDigits] = '\0';
-	length++;	
+	
+	//null character is not added to the length of the string
 	
 	return length;
 }
@@ -276,26 +278,26 @@ int simple_ftos(char * buffer, int size, float value, int precision) {
 	fractPart = -fractPart;
 	
 	//length starts with the final null character already counted
-	//!!! is it consistent to report the null character in length?
+	//this is only for counting and will later be removed
 	int length = 1;
 	
 	//the integer buffer is the size of the largest representable integer
 	char intBuffer[10];
 	int itosLength = simple_itos(intBuffer, 10, intPart);
 	if (itosLength==-1 || size-length < itosLength)
-	return -1;
+		return -1;
 	
-	for (int i=0;i<itosLength-1;i++) {
+	for (int i=0;i<itosLength;i++) {
 		buffer[i] = intBuffer[i];
 	}
 	
-	//erase the last null character
-	buffer +=itosLength-1;
-	length +=itosLength-1;
+	//increment the buffer pointer and counter
+	buffer +=itosLength;
+	length +=itosLength;
 	
 	//add decimal point
 	if (size-length<1)
-	return -1;
+		return -1;
 	*buffer = '.';
 	buffer++;
 	length++;
@@ -304,33 +306,33 @@ int simple_ftos(char * buffer, int size, float value, int precision) {
 	char fractBuffer[precision+1];
 	itosLength = simple_itos(fractBuffer, precision+1, fractPart);
 	
-	if (itosLength == -1 || (size-length < itosLength-1))
-	return -1;
+	if (itosLength == -1 || (size-length < itosLength))
+		return -1;
 	
 	//output with leading zeros
-	int numLeadingZeros = precision - (itosLength-1);
+	int numLeadingZeros = precision - itosLength;
 	for (int i=0; i<numLeadingZeros; i++) {
 		buffer[i] = '0';
 	}
 	buffer += numLeadingZeros;
 	length += numLeadingZeros;
 	
-	for (int i=0; i<itosLength-1; i++) {
+	for (int i=0; i<itosLength; i++) {
 		buffer[i] = fractBuffer[i];
 	}
-	buffer += itosLength-1;
-	length += itosLength-1;
+	buffer += itosLength;
+	length += itosLength;
 	
 	//null terminate
 	*buffer = '\0';
 	
 	return length;
 }
+
 /** A simple string to float parser. 
 	Uses simple_strtol.
 	Returns 0 on parse error.
-	
-	!!! Perhaps this should convert directly to q_31?*/
+	*/
 
 float simple_strtof(char * buffer, int length) {
 	float value;

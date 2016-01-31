@@ -7,7 +7,7 @@
 #include "atmel_start_pins.h"
 
 #include "q16d15.h"
-#include "synth_parameters.h"
+#include "synth.h"
 #include "simple_strnum.h"
 #include "modulation.h"
 #include "osc_parser.h"
@@ -15,22 +15,21 @@
 #include "serial_io.h"
 #include "systick.h"
 
+
+#include "synth.h"
+
 #define MAX_CMD_LINE_LENGTH 96
 
-#define SAMPLE_RATE 11025 
-#define SAMPLE_BUFFER_SIZE 32
 
 
-volatile q15_t samples[2][SAMPLE_BUFFER_SIZE];
-volatile int sample_buffer = 0;
-volatile int sample_index = 0;
+q15_t samples[2][NUM_MIXERS][SAMPLE_BUFFER_SIZE];
+int sample_buffer = 0;
+int sample_index = 0;
 
 static struct timer_task sampleTimer_task1;
 static struct timer_task sampleTimer_dsp_task1;
 
-volatile synth_parameters_t synth_parameters;
 
-void dsp_run_block (int i);
 
 /**Write an unsigned signal to the dac.
 	* Negative values will not render correctly.*/
@@ -48,7 +47,11 @@ void dac_configure() {
 /** Sample timer. Outputs the current sample to the DAC. */
 static void sampleTimer_cb(const struct timer_task *const timer_task) {
 	//output current sample
-	dac_write_unsigned(samples[sample_buffer][sample_index]);
+	//the dac gets mixer 0 output
+	dac_write_unsigned(samples[sample_buffer][0][sample_index]);
+	
+	//the pwm gets mixer 1 output
+	pwm_set_parameters(&PWM_1, 1<<12, samples[sample_buffer][1][sample_index]>>3);
 	
 	//increment sample number
 	sample_index++;
@@ -61,7 +64,8 @@ static void sampleTimer_cb(const struct timer_task *const timer_task) {
 
 /** Run the DSP block on the off sample.*/
 static void sampleTimer_dsp_cb(const struct timer_task *const timer_task) {
-	dsp_run_block(1-sample_buffer);
+	dsp_run_block((q15_t *) samples[1-sample_buffer]);
+
 }
 
 /** Configure the sample timer.*/
@@ -84,49 +88,36 @@ void sampleTimer_configure(void)
 	timer_start(&TIMER_0);
 }
 
-
+/** Configure PWM 1.*/
+void pwm_configure(void) {
+	pwm_enable(&PWM_1);
+}
 
 // ================
 
-phasor_state_t phasor_state_a;
-phasor_state_t phasor_state_b;
 
-q15_t scratch1[SAMPLE_BUFFER_SIZE];
-q15_t scratch2[SAMPLE_BUFFER_SIZE];
-q15_t scratch3[SAMPLE_BUFFER_SIZE];
-
-uint32_t startTicks, endTicks;
-
-void dsp_configure() {
-	phasor_state_a = initialize_phasor_state();
-	phasor_state_b = initialize_phasor_state();
+/** Button handler.*/
+static void trigger_button_pressed(void)
+{
+	int triggerLevel = gpio_get_pin_level(PA25);
+	synth_env_trigger(0,triggerLevel);
 }
 
-
-void dsp_run_block (int i) {
-	startTicks = systick_read();
-	phasor_model_t phasor_model_a = create_phasor_model(synth_parameters.lfo[0].frequency, SAMPLE_RATE);
-	phasor_q15(&phasor_model_a, &phasor_state_a, scratch1, SAMPLE_BUFFER_SIZE);
-	sine_q15( scratch1, scratch1, SAMPLE_BUFFER_SIZE);
-
-	phasor_model_t phasor_model_b = create_phasor_model(synth_parameters.lfo[1].frequency, SAMPLE_RATE);
-	phasor_q15(&phasor_model_b, &phasor_state_b, scratch2, SAMPLE_BUFFER_SIZE);
-	sine_q15(scratch2, scratch2, SAMPLE_BUFFER_SIZE);
-					
-	mix2_q15(scratch1, scratch2, samples[i], SAMPLE_BUFFER_SIZE);
-	endTicks = systick_read();
-
-	//printf("phasor_model.phase_step=%d calculated in %u systicks\n", phasor_model.phaseStep, startTicks-endTicks);
-	//printf("samples [0:3]: %d %d %d %d\n", samples[i][0], samples[i][1], samples[i][2], samples[i][3]);
-
+/**
+ * Example of using EXTERNAL_IRQ_0
+ */
+void trigger_button_configure(void)
+{
+	ext_irq_register(PIN_PA25, trigger_button_pressed);
 }
+
 
 
 
 
 // ======
 
-
+// Refactor to osc_tostring and move to osc_parser
 void osc_message_write(osc_message_t * oscMessage) {
 	for (int i=0;i<oscMessage->numAddrParts;i++) {
 		serial_write_const("/");
@@ -158,7 +149,7 @@ void osc_message_write(osc_message_t * oscMessage) {
 		}
 		else  {
 			serial_write_const("s:");
-			serial_write(oscMessage->argumentValues[i].stringArg, strlen(oscMessage->argumentValues[i].stringArg));					
+			serial_write_const(oscMessage->argumentValues[i].stringArg);					
 		}
 	}
 	serial_write_const("\n");
@@ -176,12 +167,37 @@ int main(void)
 	serial_configure();
 	dsp_configure();
 	
-	//STDIO_REDIRECT_0_init();
+	osc_interpreter_configure();
+	trigger_button_configure();
 	
-	//STDIO_REDIRECT_0_example();
+	//test pwm
+	pwm_configure();
 	
-	serial_write("Modulation Generator\n", 21);
 	
+	serial_write_const("\nModulation Generator\n");
+	
+
+	//test flash size
+	char buffer[10];
+	uint32_t page_size = flash_get_page_size(&FLASH_0);
+	size_t params_size = sizeof(synth_parameters);
+	uint32_t num_pages = flash_get_total_pages(&FLASH_0);
+	
+	//this is set with NVRAM_EEPROM_SIZE = 0x5 (2 rows = 512 bytes)
+	uint32_t num_flash_pages = 2;
+	//the address of the first flash page?
+	uint32_t ptr_flash_start = page_size*(num_pages-num_flash_pages);
+	
+	serial_write_const("Flash page size: ");
+	simple_itos(buffer, 10, page_size);
+	serial_write_const((const char *)buffer);
+	serial_write_const("\n");
+	
+	serial_write_const("Parameters size: ");
+	simple_itos(buffer, 10, params_size);
+	serial_write_const((const char *)buffer);
+	serial_write_const("\n");
+
 
 
 	//pwm_set_parameters(&PWM_0,10000,5000);
@@ -197,14 +213,19 @@ int main(void)
 		
 		if (parserResult.hasError){
 			serial_write_const("Parse error: ");
-			serial_write(parserResult.errorMessage, parserResult.errorMessageLength);
-			serial_write("\n",1);
+			serial_write_const(parserResult.errorMessage);
+			serial_write_const("\n");
 		}
 		else {
 			serial_write_const("Command received: ");
 			osc_message_write(&oscMessage);			
-			osc_message_interpret(&oscMessage);
-
+			osc_result_t interpretResult = osc_message_interpret(&oscMessage);
+			
+			if (interpretResult.hasError) {
+				serial_write_const("Interpret error: ");
+				serial_write_const(interpretResult.errorMessage);
+				serial_write_const("\n");
+			}
 		}
 	}
 }

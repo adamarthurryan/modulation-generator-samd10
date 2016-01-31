@@ -9,6 +9,7 @@
 #ifndef OSC_INTERPRETER_H_
 #define OSC_INTERPRETER_H_
 
+void osc_interpreter_configure();
 
 osc_result_t osc_message_interpret(osc_message_t * oscMessage);
 

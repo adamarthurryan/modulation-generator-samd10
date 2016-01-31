@@ -30,7 +30,7 @@ typedef union {
 
 
 typedef struct {
-	char * errorMessage;
+	const char * errorMessage;
 	int errorMessageLength;
 	int hasError;
 	

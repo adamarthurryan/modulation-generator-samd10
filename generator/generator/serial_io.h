@@ -16,7 +16,7 @@
 void serial_write(char * string, uint16_t length);
 
 /** Writes a null-terminated string (eg. a string literal) */
-void serial_write_const(char * string);
+void serial_write_const(const char * string);
 
 /** Reads a line of text from the io stream, up to the given length.
 	

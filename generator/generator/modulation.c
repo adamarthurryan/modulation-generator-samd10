@@ -7,26 +7,44 @@
 #include "modulation.h"
 
 q15_t scratch1_q15[MAX_BLOCK_SIZE];
-q15_t scratch2_q15[MAX_BLOCK_SIZE];
 
 
 //#define CLIPQ63_TO_Q31(x) ((q31_t) ((x >> 32) != ((q31_t) x >> 31)) ?	((0x7FFFFFFF ^ ((q31_t) (x >> 63)))) : (q31_t) x)
 
-phasor_model_t create_phasor_model(q16d15_t frequency, uint16_t sampleRate) {
-	int64_t freq64 = ((int64_t) frequency)<<32;
-	int64_t step64 = freq64/sampleRate;
+//!!! This could be made more efficient if we used the q15 reciprocal of the sample rate
+//then:  step64 = (int64_t) frequency * sampleRateReciprocal
+//this is a ... q1d30 value?
+phasor_model_t create_phasor_model(q16d15_t frequency, q31_t samplePeriod) {
+	int64_t freq64 = (int64_t) frequency;
+	int64_t step64 = freq64*samplePeriod;
 	
 	phasor_model_t model;
-	
-//wow, this brings in a lot of extra code! like 3 or 4 KB!
-//	model.phaseStep=clip_q63_to_q31((q63_t) (period * 2147483648.0f));
 
 	model.phaseStep = step64>>16;
-//	arm_float_to_q31(&step, &(model.phaseStep), 1);
 	return model;
 }
-adsr_model_t create_adsr_model(uint16_t attackMs, uint16_t decayMs, uint16_t releaseMs, float sustain, uint16_t sampleRate) {
+
+adsr_model_t create_adsr_model(uint16_t attackMs, uint16_t decayMs, uint16_t releaseMs, q15_t sustain, q31_t samplePeriod) {
 	adsr_model_t model;
+	q31_t sustain_q31 = sustain<<16;
+	
+	/// *** OH C'mon this routine
+	
+	
+	q16d15_t samplePeriodMs = (samplePeriod) / 1000;
+	
+	
+	model.astep = samplePeriodMs/attackMs;
+	
+	model.sustain = sustain_q31;
+
+	q31_t dstep_q31 = samplePeriodMs * (Q31_1-sustain_q31) * decayMs;
+	model.dstep = (q15_t) (dstep_q31>>16);
+	
+	q31_t rstep_q31 = samplePeriodMs * sustain_q31 * releaseMs;
+	model.rstep = (q15_t) (rstep_q31>>16);
+	
+	
 	return model;
 }
 
@@ -69,16 +87,7 @@ void phasor_q15(phasor_model_t * model, phasor_state_t * state, q15_t *phaseOut,
 }
 
 void saw_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize) {
-	//this should use arm_copy_q15, but it doesn't work for some reason
 	arm_copy_q15(phaseIn, waveOut, blockSize);
-	/*
-	int i;
-	for (i=0;i<blockSize;i++) {
-		*waveOut = *phaseIn;
-		waveOut++;
-		phaseIn++;
-	}
-	*/
 }
 
 void sine_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize) {
@@ -94,7 +103,16 @@ void sine_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize) {
 		waveOut++;
 	}
 }
-//void tri_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize);
+
+//!!! Should be able to specify a duty for the tri wave
+void tri_q15(q15_t *phaseIn, q15_t * waveOut, uint32_t blockSize) {
+	//the output signal goes from 0 to 1 as the phase goes from 0 to 0.5,
+	//then the output goes back down to 0
+	arm_offset_q15(phaseIn, -Q15_HALF, waveOut, blockSize);
+	arm_abs_q15(waveOut, waveOut, blockSize);
+	arm_scale_q15(waveOut, -Q15_1, 1, waveOut, blockSize);
+	arm_offset_q15(waveOut, Q15_1, waveOut, blockSize);
+}
 
 void square_q15(q15_t *phaseIn, q15_t duty,  q15_t * waveOut, uint32_t blockSize) {
 	int i;
@@ -107,11 +125,55 @@ void square_q15(q15_t *phaseIn, q15_t duty,  q15_t * waveOut, uint32_t blockSize
 	}	
 }
 
-void mix2_q15(q15_t *a, q15_t *b, q15_t * out, uint32_t blockSize) {
-	arm_shift_q15(a, -1, scratch1_q15, blockSize);
-	arm_shift_q15(b, -1, out, blockSize);
+void mix2_q15(q15_t *a, q15_t aLevel, q15_t *b, q15_t bLevel, q15_t * out, uint32_t blockSize) {
+	arm_scale_q15(a, aLevel, 0, out, blockSize);
+	arm_scale_q15(b, bLevel, 0, scratch1_q15, blockSize);
 	arm_add_q15(scratch1_q15, out, out, blockSize);
 }
 
-//void adsr_q15(adsr_model_t * model, uint8_t trigger, adsr_state_t * state, q15_t *envelopeOut, uint32_t blockSize);
+void adsr_q15(adsr_model_t * model, uint8_t trigger, adsr_state_t * state, q15_t *envelopeOut, uint32_t blockSize) {
+	if (state->mode == STATE_R && trigger!=0) {
+		state->mode = STATE_A;
+	}
+	else if (state->mode != STATE_R && trigger == 0) {
+		state->mode = STATE_R;
+	}
+	
+	q31_t level = state->level;
+	
+	for (int i=0;i<blockSize;i++) {
+		switch (state->mode) {
+			case STATE_A:
+				if (Q31_1 - model->astep < level) {
+					level = Q31_1;
+					state->mode = STATE_D;
+				}
+				else
+					level += model->astep;
+				
+				break;
+			case STATE_D:
+				if (model->sustain + model->dstep > level) {
+					level = model->sustain;
+					state->mode = STATE_S;
+				}
+				else
+					level -= model->dstep;
+				break;
+			case STATE_R:
+				if (0 + model->rstep > level) {
+					level = 0;
+				}
+				else
+					level -= model->rstep;
+					
+				break;
+			case STATE_S:
+				break;
+		}
+		*envelopeOut = level>>16;
+		envelopeOut++;
+	}
+	state->level = level;
+}
 

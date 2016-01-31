@@ -25,7 +25,7 @@ static struct timer_task TIMER_0_task1, TIMER_0_task2;
 
 struct usart_sync_descriptor USART_0;
 
-struct pwm_descriptor PWM_0;
+struct pwm_descriptor PWM_1;
 
 struct dac_sync_descriptor DAC_0;
 
@@ -76,65 +76,77 @@ static void TIMER_0_init(void)
 	timer_init(&TIMER_0, TC2, _tc_get_timer());
 }
 
-void PWM_0_PORT_init(void)
+void PWM_1_PORT_init(void)
 {
 	// Set pin direction to output
-	gpio_set_pin_direction(PA14, GPIO_DIRECTION_OUT);
+	gpio_set_pin_direction(PA04, GPIO_DIRECTION_OUT);
 
-	gpio_set_pin_level(PA14,
+	gpio_set_pin_level(PA04,
 	        // <y> Initial level
 	        // <id> pad_initial_level
 	        // <false"> Low
 	        // <true"> High
 			false);
 
-	gpio_set_pin_function(PA14, PINMUX_PA14F_TCC0_WO0);
+	gpio_set_pin_function(PA04, PINMUX_PA04F_TCC0_WO0);
 
 	// Set pin direction to output
-	gpio_set_pin_direction(PA15, GPIO_DIRECTION_OUT);
+	gpio_set_pin_direction(PA05, GPIO_DIRECTION_OUT);
 
-	gpio_set_pin_level(PA15,
+	gpio_set_pin_level(PA05,
 	        // <y> Initial level
 	        // <id> pad_initial_level
 	        // <false"> Low
 	        // <true"> High
 			false);
 
-	gpio_set_pin_function(PA15, PINMUX_PA15F_TCC0_WO1);
+	gpio_set_pin_function(PA05, PINMUX_PA05F_TCC0_WO1);
 
 	// Set pin direction to output
-	gpio_set_pin_direction(PA09, GPIO_DIRECTION_OUT);
+	gpio_set_pin_direction(PA30, GPIO_DIRECTION_OUT);
 
-	gpio_set_pin_level(PA09,
+	gpio_set_pin_level(PA30,
 	        // <y> Initial level
 	        // <id> pad_initial_level
 	        // <false"> Low
 	        // <true"> High
 			false);
 
-	gpio_set_pin_function(PA09, PINMUX_PA09E_TCC0_WO3);
+	gpio_set_pin_function(PA30, PINMUX_PA30F_TCC0_WO2);
+
+	// Set pin direction to output
+	gpio_set_pin_direction(PA31, GPIO_DIRECTION_OUT);
+
+	gpio_set_pin_level(PA31,
+	        // <y> Initial level
+	        // <id> pad_initial_level
+	        // <false"> Low
+	        // <true"> High
+			false);
+
+	gpio_set_pin_function(PA31, PINMUX_PA31F_TCC0_WO3);
 }
 
-void PWM_0_CLOCK_init(void)
+void PWM_1_CLOCK_init(void)
 {
 	_pm_enable_bus_clock(PM_BUS_APBC, TCC0);
 	_gclk_enable_channel(TCC0_GCLK_ID, CONF_GCLK_TCC0_SRC);
 }
 
-void PWM_0_init(void)
+void PWM_1_init(void)
 {
-	PWM_0_CLOCK_init();
-	PWM_0_PORT_init();
-	pwm_init(&PWM_0, TCC0, _tcc_get_pwm());
+	PWM_1_CLOCK_init();
+	PWM_1_PORT_init();
+	pwm_init(&PWM_1, TCC0, _tcc_get_pwm());
 }
 
 /**
- * Example of using PWM_0.
+ * Example of using PWM_1.
  */
-void PWM_0_example(void)
+void PWM_1_example(void)
 {
-	pwm_set_parameters(&PWM_0, 10000, 5000);
-	pwm_enable(&PWM_0);
+	pwm_set_parameters(&PWM_1, 10000, 5000);
+	pwm_enable(&PWM_1);
 }
 
 void EXTERNAL_IRQ_0_init(void)
@@ -355,7 +367,7 @@ void system_init(void)
 	USART_0_init();
 	TIMER_0_init();
 
-	PWM_0_init();
+	PWM_1_init();
 	EXTERNAL_IRQ_0_init();
 
 	DAC_0_init();

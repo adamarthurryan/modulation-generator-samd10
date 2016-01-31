@@ -29,7 +29,7 @@
 	extern struct usart_sync_descriptor USART_0;
 	extern struct timer_descriptor TIMER_0;
 
-	extern struct pwm_descriptor PWM_0;
+	extern struct pwm_descriptor PWM_1;
 
 	extern struct dac_sync_descriptor DAC_0;
 
@@ -40,10 +40,10 @@
 	void USART_0_init(void);
 	void USART_0_example(void);
 
-	void PWM_0_PORT_init(void);
-	void PWM_0_CLOCK_init(void);
-	void PWM_0_init(void);
-	void PWM_0_example(void);
+	void PWM_1_PORT_init(void);
+	void PWM_1_CLOCK_init(void);
+	void PWM_1_init(void);
+	void PWM_1_example(void);
 
 	void DAC_0_PORT_init(void);
 	void DAC_0_CLOCK_init(void);
