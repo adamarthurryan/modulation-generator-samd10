@@ -57,7 +57,7 @@ typedef struct {
 
 
 phasor_model_t create_phasor_model(q16d15_t frequency, q31_t sampleRate);
-adsr_model_t create_adsr_model(uint16_t attackMs, uint16_t decayMs, uint16_t releaseMs, q15_t sustain, q31_t sampleRate);
+adsr_model_t create_adsr_model(q16d15_t attack, q16d15_t decay, q16d15_t release, q15_t sustain, q31_t samplePeriod);
 
 phasor_state_t initialize_phasor_state();
 adsr_state_t initialize_adsr_state();

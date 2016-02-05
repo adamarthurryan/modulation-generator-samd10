@@ -7,6 +7,7 @@
 #include "modulation.h"
 
 q15_t scratch1_q15[MAX_BLOCK_SIZE];
+//q15_t scratch2_q15[MAX_BLOCK_SIZE];
 
 
 //#define CLIPQ63_TO_Q31(x) ((q31_t) ((x >> 32) != ((q31_t) x >> 31)) ?	((0x7FFFFFFF ^ ((q31_t) (x >> 63)))) : (q31_t) x)
@@ -24,26 +25,28 @@ phasor_model_t create_phasor_model(q16d15_t frequency, q31_t samplePeriod) {
 	return model;
 }
 
-adsr_model_t create_adsr_model(uint16_t attackMs, uint16_t decayMs, uint16_t releaseMs, q15_t sustain, q31_t samplePeriod) {
+adsr_model_t create_adsr_model(q16d15_t attack, q16d15_t decay, q16d15_t release, q15_t sustain, q31_t samplePeriod) {
 	adsr_model_t model;
 	q31_t sustain_q31 = sustain<<16;
-	
-	/// *** OH C'mon this routine
-	
-	
-	q16d15_t samplePeriodMs = (samplePeriod) / 1000;
-	
-	
-	model.astep = samplePeriodMs/attackMs;
-	
 	model.sustain = sustain_q31;
 
-	q31_t dstep_q31 = samplePeriodMs * (Q31_1-sustain_q31) * decayMs;
-	model.dstep = (q15_t) (dstep_q31>>16);
+	//this is q15d16 format
+	int32_t nAttackSteps = (Q31_1 / attack);
+	//this is q15d47 format
+	int64_t astep_64 = ((int64_t) nAttackSteps)*samplePeriod;
+	model.astep = (q31_t) (astep_64 >> 16);
 	
-	q31_t rstep_q31 = samplePeriodMs * sustain_q31 * releaseMs;
-	model.rstep = (q15_t) (rstep_q31>>16);
-	
+	//this is q15d16 format
+	int32_t nDecaySteps = ((Q31_1-sustain_q31) / decay);
+	//this is q47d16 format
+	int64_t dstep_64 = ((int64_t) nDecaySteps)*samplePeriod;
+	model.dstep = (q31_t) (dstep_64 >> 16);
+
+	//this is q15d16 format
+	int32_t nReleaseSteps = ((sustain_q31) / release);
+	//this is q47d16 format
+	int64_t rstep_64 = ((int64_t) nReleaseSteps)*samplePeriod;
+	model.rstep = (q31_t) (rstep_64 >> 16);
 	
 	return model;
 }
@@ -126,8 +129,8 @@ void square_q15(q15_t *phaseIn, q15_t duty,  q15_t * waveOut, uint32_t blockSize
 }
 
 void mix2_q15(q15_t *a, q15_t aLevel, q15_t *b, q15_t bLevel, q15_t * out, uint32_t blockSize) {
-	arm_scale_q15(a, aLevel, 0, out, blockSize);
-	arm_scale_q15(b, bLevel, 0, scratch1_q15, blockSize);
+	arm_scale_q15(a, aLevel, 0, scratch1_q15, blockSize);
+	arm_scale_q15(b, bLevel, 0, out, blockSize);
 	arm_add_q15(scratch1_q15, out, out, blockSize);
 }
 
@@ -153,7 +156,7 @@ void adsr_q15(adsr_model_t * model, uint8_t trigger, adsr_state_t * state, q15_t
 				
 				break;
 			case STATE_D:
-				if (model->sustain + model->dstep > level) {
+				if ((model->sustain + model->dstep < 0) || model->sustain + model->dstep > level) {
 					level = model->sustain;
 					state->mode = STATE_S;
 				}

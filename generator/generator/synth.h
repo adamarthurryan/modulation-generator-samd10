@@ -31,9 +31,9 @@ typedef struct {
 
 
 typedef struct {
-	int attack;
-	int decay;
-	int release;
+	q16d15_t attack;
+	q16d15_t decay;
+	q16d15_t release;
 	q15_t sustain;
 } env_parameters_t;
 

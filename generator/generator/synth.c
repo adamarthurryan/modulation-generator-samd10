@@ -8,7 +8,7 @@
 
 #include "synth.h"
 
-synth_parameters_t synth_parameters = {{{Q16D15_1, SAW, Q16D15_1_HALF}, {Q16D15_1, SAW, Q16D15_1_HALF}}, {{1000, 1000, 1000, Q16D15_1}, {1000, 1000, 1000, Q16D15_1}}, {{{Q16D15_1_HALF, Q16D15_1_HALF}, {0, 0}}, {{Q16D15_1_HALF, Q16D15_1_HALF}, {0, 0}}}};
+synth_parameters_t synth_parameters = {{{Q16D15_1, SAW, Q16D15_1_HALF}, {Q16D15_1, SAW, Q16D15_1_HALF}}, {{Q16D15_1,Q16D15_1,Q16D15_1, Q16D15_1}, {Q16D15_1,Q16D15_1,Q16D15_1, Q16D15_1}}, {{{Q16D15_1_HALF, Q16D15_1_HALF}, {0, 0}}, {{Q16D15_1_HALF, Q16D15_1_HALF}, {0, 0}}}};
 
 phasor_state_t lfoPhasorState[NUM_LFOS];
 adsr_state_t envState[NUM_ENVS];
@@ -32,12 +32,14 @@ void dsp_configure() {
 
 
 void dsp_run_block (q15_t * block) {
-	q15_t lfoBuffer[NUM_LFOS][SAMPLE_BUFFER_SIZE];
-	volatile q15_t envBuffer[NUM_ENVS][SAMPLE_BUFFER_SIZE];
+	static q15_t lfoBuffer[NUM_LFOS][SAMPLE_BUFFER_SIZE];
+	static q15_t envBuffer[NUM_ENVS][SAMPLE_BUFFER_SIZE];
 	
 	//render LFOs
 	for (int i=0;i<NUM_LFOS;i++) {
-		phasor_model_t lfoPhasorModel = create_phasor_model(synth_parameters.lfo[i].frequency, SAMPLE_PERIOD_Q31);
+		static phasor_model_t lfoPhasorModel;
+		lfoPhasorModel = create_phasor_model(synth_parameters.lfo[i].frequency, SAMPLE_PERIOD_Q31);
+		
 		phasor_q15(&lfoPhasorModel, &lfoPhasorState[i], lfoBuffer[i], SAMPLE_BUFFER_SIZE);
 		switch (synth_parameters.lfo[i].shape) {
 			case SAW:
@@ -57,7 +59,7 @@ void dsp_run_block (q15_t * block) {
 	
 	//render envs
 	for (int i=0;i<NUM_ENVS;i++) {
-		adsr_model_t envModel ;
+		static adsr_model_t envModel;
 		envModel = create_adsr_model(synth_parameters.env[i].attack,\
 					synth_parameters.env[i].decay,\
 					synth_parameters.env[i].release,\
@@ -67,7 +69,7 @@ void dsp_run_block (q15_t * block) {
 	}
 	
 	//render mix outs
-	q15_t mixOut[NUM_MIXERS][SAMPLE_BUFFER_SIZE];
+	static q15_t mixOut[NUM_MIXERS][SAMPLE_BUFFER_SIZE];
 	for (int i=0;i<NUM_MIXERS;i++) {
 		mix2_q15(lfoBuffer[0], synth_parameters.mix[i].lfo[0], lfoBuffer[1], synth_parameters.mix[i].lfo[1], mixOut[i], SAMPLE_BUFFER_SIZE);
 		mix2_q15(envBuffer[0], synth_parameters.mix[i].env[0], mixOut[i], Q15_1, mixOut[i], SAMPLE_BUFFER_SIZE);
@@ -75,4 +77,5 @@ void dsp_run_block (q15_t * block) {
 	}
 	
 	arm_copy_q15(mixOut[0], block, SAMPLE_BUFFER_SIZE);
+	//arm_copy_q15(envBuffer[0], block, SAMPLE_BUFFER_SIZE);
 }

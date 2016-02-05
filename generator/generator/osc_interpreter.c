@@ -48,10 +48,10 @@ OSC_HANDLER(lfoDuty) {
 }
 
 OSC_HANDLER(envADSR) {
-	synth_parameters.env[instance].attack =  args[0].intArg;
-	synth_parameters.env[instance].decay =   args[1].intArg;
+	synth_parameters.env[instance].attack =  args[0].qArg;
+	synth_parameters.env[instance].decay =   args[1].qArg;
 	synth_parameters.env[instance].sustain = args[2].qArg;
-	synth_parameters.env[instance].release = args[3].intArg;
+	synth_parameters.env[instance].release = args[3].qArg;
 	return osc_result_success();
 }
 
@@ -96,7 +96,7 @@ typedef struct {
 } osc_def_module_t;
 
 const osc_def_module_t mod_lfo = { "lfo", 2, 3, {{"freq", "f", &lfoFreq}, {"shape", "s", &lfoShape}, {"duty", "f", &lfoDuty}}};
-const osc_def_module_t mod_env = {"env", 2, 2, {{"adsr", "iifi", &envADSR}, {"trig", "i", &envTrigger}}};
+const osc_def_module_t mod_env = {"env", 2, 2, {{"adsr", "ffff", &envADSR}, {"trig", "i", &envTrigger}}};
 const osc_def_module_t mod_mix = {"mix", 2, 2, {{"lfo", "ff", &mixLFO}, {"env", "ff", &mixEnv}}};
 const osc_def_module_t mod_data = {"data", 2, 2, {{"save", "", &notImplemented}, {"load", "", &notImplemented}, {"reset", "", &notImplemented}}};
 

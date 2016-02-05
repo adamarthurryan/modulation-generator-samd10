@@ -99,9 +99,11 @@ void pwm_configure(void) {
 /** Button handler.*/
 static void trigger_button_pressed(void)
 {
-	int triggerLevel = gpio_get_pin_level(PA25);
+	int triggerLevel = !gpio_get_pin_level(PA25);
 	synth_env_trigger(0,triggerLevel);
+	synth_env_trigger(1,triggerLevel);
 }
+
 
 /**
  * Example of using EXTERNAL_IRQ_0
@@ -135,7 +137,7 @@ void osc_message_write(osc_message_t * oscMessage) {
 		if (oscMessage->argumentTypes[i] == Q) {
 			serial_write_const("f:");
 
-			char buf[24];
+			static char buf[24];
 			q16d15_t value = oscMessage->argumentValues[i].qArg;
 			simple_qtos(buf, 13, value, 3);
 			serial_write(buf, strlen(buf));
@@ -143,7 +145,7 @@ void osc_message_write(osc_message_t * oscMessage) {
 		else if (oscMessage->argumentTypes[i] == INT) {
 			serial_write_const("i:");
 
-			char buf[13];
+			static char buf[13];
 			simple_itos(buf, 13, oscMessage->argumentValues[i].intArg);
 			serial_write(buf, strlen(buf));
 		}
@@ -204,9 +206,9 @@ int main(void)
 	//pwm_enable(&PWM_0);
 
 	while(1) {
-		osc_message_t oscMessage;
+		static osc_message_t oscMessage;
 		
-		char line[MAX_CMD_LINE_LENGTH];
+		static char line[MAX_CMD_LINE_LENGTH];
 		int lineLength = serial_read_line(line, MAX_CMD_LINE_LENGTH, true);
 
 		osc_result_t parserResult = osc_parse(line, lineLength, &oscMessage);

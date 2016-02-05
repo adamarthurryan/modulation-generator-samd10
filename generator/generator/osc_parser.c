@@ -33,8 +33,8 @@ osc_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMessage) 
 	
 	
 	//split the string into space-delimited parts
-	char * parts[MAX_CMD_PARTS];
-	int partLengths[MAX_CMD_PARTS];
+	static char * parts[MAX_CMD_PARTS];
+	static int partLengths[MAX_CMD_PARTS];
 	int numParts = split_string(line, lineLength, ' ', parts,  partLengths, MAX_CMD_PARTS);
 		
 	if (numParts<-1) {
@@ -44,8 +44,8 @@ osc_result_t osc_parse(char * line, int lineLength, osc_message_t * oscMessage) 
 		return osc_result_error("No command");
 
 	//break the type tag from the address
-	char * signatureParts[2];
-	int signaturePartLengths[2];
+	static char * signatureParts[2];
+	static int signaturePartLengths[2];
 	int numSignatureParts = split_string(parts[0], partLengths[0], ',', signatureParts, signaturePartLengths, 2);
 		
 	if (numSignatureParts!=2 && numSignatureParts!=1) {
